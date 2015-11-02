@@ -1,0 +1,24 @@
+lowculator
+
+properties:
+no multiprecision support?
+built in c math function support.
+binary, octal, decimal, hexadecimal (floating?) number support.
+plus, substract, multiply, divide, modulo, power, squareroot support.
+variable support?
+
+command line:
+
+lowculator -c [EXPRESSION] [EXPRESSION...]
+Calculate all expressions, one line per output.
+
+lowculator EXPRESSION [EXPRESSION...]
+Calculate all expressions, one line per output. Then, go to interactive mode.
+
+
+errors:
+
+math error              E:MATH
+syntax error            E:SYNTAX
+unsupported operation   E:UNSUPPORTED
+
