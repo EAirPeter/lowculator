@@ -15,10 +15,39 @@ Calculate all expressions, one line per output.
 lowculator EXPRESSION [EXPRESSION...]
 Calculate all expressions, one line per output. Then, go to interactive mode.
 
-
 errors:
 
 math error              E:MATH
 syntax error            E:SYNTAX
 unsupported operation   E:UNSUPPORTED
+
+spec:
+EXPRESSION:
+    WS EXPRESSION
+    PARENTHESIZED_EXPRESSION
+    NUMBER
+    EXPRESSION OPR EXPRESSION
+    FUNCTION_CALL
+NUMBER:
+    BINARY_FLOATING
+    OCTAL_FLOATING
+    DECIMAL_FLOATING
+    HEXADECIMAL_FLOATING
+INTEGER:
+    BINARY_INTEGER
+    OCTAL_INTEGER
+    DECIMAL_INTEGER
+    HEXADECIMAL_INTEGER
+PARENTHESIZED_EXPRESSION:   \((WS)(EXPRESSION)\)(WS)
+BINARY_DIGITS:              [0-1]
+OCTAL_DIGITS:               [0-7]
+DECIMAL_DIGITS:             [0-9]
+HEXADECIMAL_DIGITS:         [0-9A-Fa-f]
+X_FLOATING:                 (X_INTEGER)(\.(X_DIGITS)+)?([Ee](INTEGER))?(WS)
+X_INTEGER:                  [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
+OPR:                        [\+\-\*\/\^](WS)
+FUNCTION_CALL:              (FUNCTION_NAME)\(EXPRESSION\)(WS)
+WS:                         [\t ]*
+FUNCTION_NAME:
+    "exit¡°
 
