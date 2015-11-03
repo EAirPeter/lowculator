@@ -4,7 +4,7 @@ properties:
 no multiprecision support?
 built in c math function support.
 binary, octal, decimal, hexadecimal (floating?) number support.
-plus, substract, multiply, divide, modulo, power, squareroot support.
+plus, substract, multiply, divide, power support.
 variable support?
 
 command line:
@@ -16,10 +16,14 @@ lowculator EXPRESSION [EXPRESSION...]
 Calculate all expressions, one line per output. Then, go to interactive mode.
 
 errors:
-
-math error              E:MATH
-syntax error            E:SYNTAX
-unsupported operation   E:UNSUPPORTED
+ERROR:
+    ERROR_TYPE ERROR_REASON
+ERROR_TYPE:
+    "E:SYNTAX"          => syntax error
+    "E:MATH"            => math error
+    "E:UNSUPPORTED"     => unsupported operation
+ERROR_REASON:
+    a string
 
 spec:
 EXPRESSION:
@@ -38,16 +42,29 @@ INTEGER:
     OCTAL_INTEGER
     DECIMAL_INTEGER
     HEXADECIMAL_INTEGER
-PARENTHESIZED_EXPRESSION:   \((WS)(EXPRESSION)\)(WS)
-BINARY_DIGITS:              [0-1]
-OCTAL_DIGITS:               [0-7]
-DECIMAL_DIGITS:             [0-9]
-HEXADECIMAL_DIGITS:         [0-9A-Fa-f]
+DIGITS:
+    BINARY_DIGITS:              [0-1]
+    OCTAL_DIGITS:               [0-7]
+    DECIMAL_DIGITS:             [0-9]
+    HEXADECIMAL_DIGITS:         [0-9A-Fa-f]
+HEADERS:
+    BINARY_HEADER:
+        "0b"
+    OCTAL_HEADER:
+        "0"
+    DECIMAL_HEADER:
+        ""
+    HEXADECIMAL_HEADER:
+        "0x"
+
 X_FLOATING:                 (X_INTEGER)(\.(X_DIGITS)+)?([Ee](INTEGER))?(WS)
 X_INTEGER:                  [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
+PARENTHESIZED_EXPRESSION:   \((WS)(EXPRESSION)\)(WS)
 OPR:                        [\+\-\*\/\^](WS)
-FUNCTION_CALL:              (FUNCTION_NAME)\(EXPRESSION\)(WS)
+FUNCTION_CALL:              (FUNCTION_NAME)(WS)\(EXPRESSION(,(EXPRESSION))?\)(WS)
 WS:                         [\t ]*
-FUNCTION_NAME:
+FUNCTION_NAME:              [A-Za-z][A-Za-z0-9_]*
+
+supported FUNCTION_NAME:
     "exit¡°
 
