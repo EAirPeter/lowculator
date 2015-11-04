@@ -126,8 +126,7 @@ int X_EvalExpression() {
                             if ((res = X_EvalExpression()))
                                 XEE_RET(res);
                             buf[len] = x_pval;
-                            if (!XX_ParseChar(','))
-                                break;
+                            XX_ParseChar(',');
                         }
                         if (!XX_ParseChar(')'))
                             E_ECHAR(')');
