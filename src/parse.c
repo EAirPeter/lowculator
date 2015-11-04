@@ -173,6 +173,8 @@ int X_ParseNumber() {
         return E_UCHAR();
     if (CIsWS(*x_src))
         XX_Next();
+    if (!CIsStructural(*x_src))
+        return E_UCHAR();
     x_pval = val;
     return E_SUCCESS;
 }
