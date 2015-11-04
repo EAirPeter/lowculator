@@ -19,43 +19,43 @@
 
 uint32_t        cx_type[256];
 
-inline  bool    CIsAlpha(int chr) {
+static inline bool CIsAlpha(int chr) {
     return cx_type[chr] & C_ALP;
 }
 
-inline  bool    CIsAUpr(int chr) {
+static inline bool CIsAUpr(int chr) {
     return cx_type[chr] & C_UPR;
 }
 
-inline  bool    CIsALwr(int chr) {
+static inline bool CIsALwr(int chr) {
     return cx_type[chr] & C_LWR;
 }
 
-inline  bool    CIsDigB(int chr) {
+static inline bool CIsDigB(int chr) {
     return cx_type[chr] & C_DIB;
 }
 
-inline  bool    CIsDigO(int chr) {
+static inline bool CIsDigO(int chr) {
     return cx_type[chr] & C_DIO;
 }
 
-inline  bool    CIsDigD(int chr) {
+static inline bool CIsDigD(int chr) {
     return cx_type[chr] & C_DID;
 }
 
-inline  bool    CIsDigH(int chr) {
+static inline bool CIsDigH(int chr) {
     return cx_type[chr] & C_DIH;
 }
 
-inline  bool    CIsName(int chr) {
+static inline bool CIsName(int chr) {
     return cx_type[chr] & C_NAM;
 }
 
-inline  bool    CIsStructural(int chr) {
+static inline bool CIsStructural(int chr) {
     return cx_type[chr] & C_STR;
 }
 
-inline  bool    CIsWS(int chr) {
+static inline bool CIsWS(int chr) {
     return cx_type[chr] & C_WSP;
 }
 
