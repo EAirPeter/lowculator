@@ -4,6 +4,7 @@
 #include "functions.h"
 #include "stack.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 #include <tgmath.h>
@@ -59,7 +60,7 @@ inline  int     XX_Next();
 
 inline  int     XXX_ToDigit(int chr);
 inline  bool    XXX_ShouldPop(int instack, int topush);
-inline  void    XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
+inline  int     XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
 
 #define XEE_RET(v_) do {SDestroy(sval); SDestroy(sopr); return v_;} while(false)
 
@@ -82,7 +83,8 @@ int X_EvalExpression() {
         case '*':
         case '/':
         case '^':
-            XXX_PushOpr(sopr, sval, *x_src);
+            if ((res = XXX_PushOpr(sopr, sval, *x_src)))
+                XEE_RET(res);
             XX_Next();
             break;
         case '(':
@@ -136,7 +138,8 @@ int X_EvalExpression() {
             break;
         }
     }
-    XXX_PushOpr(sopr, sval, 0);
+    if ((res = XXX_PushOpr(sopr, sval, 0)))
+        XEE_RET(res);
     if (SSize(sopr) != 1 || SSize(sval) != 1)
         XEE_RET(E_ILLEGAL());
     x_pval = STopVal(sval);
@@ -275,7 +278,37 @@ bool XXX_ShouldPop(int instack, int topush) {
     return x_pri[instack] >= x_pri[topush];
 }
 
-void XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
+int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
+    while (!SEmpty(sopr) && XXX_ShouldPop(STopOpr(sopr), opr)) {
+        if (SSize(sval) < 2)
+            return E_ILLEGAL();
+        long double rhs = SPopVal(sval);
+        long double lhs = SPopVal(sval);
+        long double res = 0.0L;
+        switch (opr) {
+        case '+':
+            res = lhs + rhs;
+            break;
+        case '-':
+            res = lhs - rhs;
+            break;
+        case '*':
+            res = lhs * rhs;
+            break;
+        case '/':
+            res = lhs / rhs;
+            break;
+        case '^':
+            res = powl(lhs, rhs);
+            break;
+        default:
+            return E_ILLEGAL();
+        }
+        if (res == NAN || res == -NAN)
+            return E_HMATH();
+        SPushVal(sval, res);
+    }
+    return E_SUCCESS;
 }
 
 long double PEval(int line, const char *expr) {

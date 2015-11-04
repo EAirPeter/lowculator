@@ -7,7 +7,7 @@ SET (LOWCULATOR_VERSION_MINOR 0)
 SET (LOWCULATOR_VERSION_PATCH 0)
 SET (LOWCULATOR_VERSION_TWEAK 0)
 
-ADD_DEFINITIONS ("-Wall -Wconversion -Werror -Wextra -Wformat -ansi -std=c11")
+ADD_DEFINITIONS ("-Wall -Wconversion -Werror -Wextra -Wformat -ansi -std=c11 -lm -lc")
 
 ADD_SUBDIRECTORY("src" "bin")
 SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)

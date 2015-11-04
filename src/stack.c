@@ -18,7 +18,7 @@ struct X_Node_ {
 Stack   *x_stks;
 X_Node  *x_nods;
 
-static  inline X_Node *X_CreateNode(X_Node *nex) {
+static inline X_Node *X_CreateNode(X_Node *nex) {
     X_Node *res = x_nods;
     if (res)
         x_nods = res->nex;
