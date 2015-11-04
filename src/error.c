@@ -68,6 +68,11 @@ int ESyntaxMismatch(int lne, int col) {
     return x_elno = E_SYNTAX;
 }
 
+int ESyntaxIllegal(int lne) {
+    X_MSGSTRINL("the expression is ill-formed.");
+    return x_elno = E_SYNTAX;
+}
+
 int EMath(int lne) { 
     switch (errno) {
     case EDOM:

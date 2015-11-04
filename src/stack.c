@@ -6,26 +6,24 @@ typedef struct X_Node_ X_Node;
 
 struct Stack_ {
     X_Node             *top;
-    DestroyFunction    *des;
     size_t              siz;
     Stack              *nex;
 };
 
 struct X_Node_ {
-    void               *val;
+    SElement            ele;
     X_Node             *nex;
 };
 
 Stack   *x_stks;
 X_Node  *x_nods;
 
-static  inline X_Node *X_CreateNode(void *val, X_Node *nex) {
+static  inline X_Node *X_CreateNode(X_Node *nex) {
     X_Node *res = x_nods;
     if (res)
         x_nods = res->nex;
     else
         res = (X_Node *) malloc(sizeof(X_Node));
-    res->val = val;
     res->nex = nex;
     return res;
 }
@@ -37,14 +35,13 @@ static inline X_Node *X_DestroyNode(X_Node *nod) {
     return res;
 }
 
-Stack *SCreate(DestroyFunction *des) {
+Stack *SCreate() {
     Stack *res = x_stks;
     if (res)
         x_stks = res->nex;
     else
         res = (Stack *) malloc(sizeof(Stack));
     res->top = nullptr;
-    res->des = des;
     res->siz = 0;
     res->nex = nullptr;
     return res;
@@ -53,7 +50,6 @@ Stack *SCreate(DestroyFunction *des) {
 void SDestroy(Stack *stk) {
     for (X_Node *i = stk->top; i; ) {
         X_Node *p = i->nex;
-        stk->des(i->val);
         X_DestroyNode(i);
         i = p;
     }
@@ -61,22 +57,42 @@ void SDestroy(Stack *stk) {
     x_stks = stk;
 }
 
-void SPush(Stack *stk, void *val) {
-    stk->top = X_CreateNode(val, stk->top);
+void SPushOpr(Stack *stk, int opr) {
+    stk->top = X_CreateNode(stk->top);
+    stk->top->ele.opr = opr;
     ++stk->siz;
 }
 
-void *SPop(Stack *stk) {
+void SPushVal(Stack *stk, long double val) {
+    stk->top = X_CreateNode(stk->top);
+    stk->top->ele.val = val;
+    ++stk->siz;
+}
+
+int SPopOpr(Stack *stk) {
     if (!stk->top)
-        return nullptr;
-    void *res = stk->top->val;
+        return 0;
+    int res = stk->top->ele.opr;
     stk->top = X_DestroyNode(stk->top);
     --stk->siz;
     return res;
 }
 
-void *STop(Stack *stk) {
-    return stk->top ? stk->top->val : nullptr;
+long double SPopVal(Stack *stk) {
+    if (!stk->top)
+        return 0.0L;
+    long double res = stk->top->ele.val;
+    stk->top = X_DestroyNode(stk->top);
+    --stk->siz;
+    return res;
+}
+
+int STopOpr(Stack *stk) {
+    return stk->top ? stk->top->ele.opr : 0;
+}
+
+long double STopVal(Stack *stk) {
+    return stk->top ? stk->top->ele.val : 0.0L;
 }
 
 bool SEmpty(Stack *stk) {

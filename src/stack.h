@@ -5,25 +5,36 @@
 
 typedef struct Stack_ Stack;
 
-typedef void (DestroyFunction)(void *);
+typedef union SElement_ SElement;
 
-void    SStartup();
+union SElement_ {
+    int         opr;
+    long double val;
+};
 
-void    SCleanup();
+void        SStartup();
 
-Stack  *SCreate (DestroyFunction *des);
+void        SCleanup();
 
-void    SDestroy(Stack *stk);
+Stack      *SCreate();
 
-void    SPush   (Stack *stk, void *val);
+void        SDestroy(Stack *stk);
 
-void   *SPop    (Stack *stk);
+void        SPushOpr(Stack *stk, int         opr);
 
-void   *STop    (Stack *stk);
+void        SPushVal(Stack *stk, long double val);
 
-bool    SEmpty  (Stack *stk);
+int         SPopOpr(Stack *stk);
 
-size_t  SSize   (Stack *stk);
+long double SPopVal(Stack *stk);
+
+int         STopOpr(Stack *stk);
+
+long double STopVal(Stack *stk);
+
+bool        SEmpty(Stack *stk);
+
+size_t      SSize(Stack *stk);
 
 #endif
 

@@ -2,12 +2,11 @@
 
 #include "error.h"
 #include "functions.h"
+#include "stack.h"
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <tgmath.h>
-#include <string.h>
 
 #include "lcctype.inl"
 
@@ -20,6 +19,8 @@ const char *x_src;
 
 long double x_pval;
 char        x_pstr[BUF_SIZE];
+
+int         x_pri[256];
 
 #define ARG_MAX   4U
 
@@ -39,6 +40,8 @@ char        x_pstr[BUF_SIZE];
     ESyntaxUndefined        (x_lne, x_col, x_pstr)
 #define E_MISM()    \
     ESyntaxMismatch         (x_lne, x_col)
+#define E_ILLEGAL() \
+    ESyntaxIllegal          (x_lne)
 #define E_HMATH()   \
     EMath                   (x_lne)
 
@@ -55,34 +58,40 @@ inline  int     XX_Read();
 inline  int     XX_Next();
 
 inline  int     XXX_ToDigit(int chr);
+inline  bool    XXX_ShouldPop(int instack, int topush);
+inline  void    XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
+
+#define XEE_RET(v_) do {SDestroy(sval); SDestroy(sopr); return v_;} while(false)
 
 int X_EvalExpression() {
     long double buf[ARG_MAX];
     int res = E_SUCCESS;
     size_t len;
+    Stack *sval = SCreate();
+    Stack *sopr = SCreate();
     while (*x_src && *x_src != ')') {
         switch (*x_src) {
         case '+':
         case '-':
             if (CIsDigD(XX_Peek())) {
                 if ((res = X_ParseNumber()))
-                    return res;
-                //pushvalue: x_pval
+                    XEE_RET(res);
+                SPushVal(sval, x_pval);
                 break;
             }
         case '*':
         case '/':
         case '^':
-            //pushopr
+            XXX_PushOpr(sopr, sval, *x_src);
             XX_Next();
             break;
         case '(':
             XX_Next();
             if ((res = X_EvalExpression()))
-                return res;
-            //pushvalue: x_pval
+                XEE_RET(res);
+            SPushVal(sval, x_pval);
             if (!XX_ParseChar(')'))
-                return E_ECHAR(')');
+                XEE_RET(E_ECHAR(')'));
             XX_Next();
             break;
         case ')':
@@ -91,24 +100,24 @@ int X_EvalExpression() {
         default:
             if (CIsDigD(*x_src)) {
                 if ((res = X_ParseNumber()))
-                    return res;
-                //pushvalue: x_pval
+                    XEE_RET(res);
+                SPushVal(sval, x_pval);
             } else if(CIsAlpha(*x_src)) {
                 //=>X_EvalFunctionCall
                 if ((res = X_ParseName()))
-                    return res;
+                    XEE_RET(res);
                 MathFunction *fun = FGetFunction(x_pstr);
                 if (!fun)
-                    return E_UNDEF();
+                    XEE_RET(E_UNDEF());
                 if (!XX_ParseChar('('))
-                    return E_ECHAR('(');
+                    XEE_RET(E_ECHAR('('));
                 for (len = 0; len < ARG_MAX; ++len) {
                     if (!XX_Next())
-                        return E_UEOF();
+                        XEE_RET(E_UEOF());
                     if (*x_src == ')')
                         break;
                     if ((res = X_EvalExpression()))
-                        return res;
+                        XEE_RET(res);
                     buf[len] = x_pval;
                     if (!XX_ParseChar(','))
                         break;
@@ -119,15 +128,19 @@ int X_EvalExpression() {
                 x_pval = fun(buf, len);
                 int e = ELast();
                 if (e == E_SYNTAX)
-                    return E_MISM();
+                    XEE_RET(E_MISM());
                 if (e == E_MATH)
-                    return E_HMATH();
-                //pushvalue: x_pval
+                    XEE_RET(E_HMATH());
+                SPushVal(sval, x_pval);
             }
             break;
         }
     }
-    return E_SUCCESS;
+    XXX_PushOpr(sopr, sval, 0);
+    if (SSize(sopr) != 1 || SSize(sval) != 1)
+        XEE_RET(E_ILLEGAL());
+    x_pval = STopVal(sval);
+    XEE_RET(E_SUCCESS);
 }
 
 int X_ParseName() {
@@ -257,6 +270,14 @@ int XXX_ToDigit(int chr) {
     return -1;
 }
 
+bool XXX_ShouldPop(int instack, int topush) {
+    //return x_pri[topush] & 1 ? x_pri[instack] > x_pri[topush] : x_pri[instack] >= x_pri[topush];
+    return x_pri[instack] >= x_pri[topush];
+}
+
+void XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
+}
+
 long double PEval(int line, const char *expr) {
     x_lne = line;
     x_col = 0;
@@ -269,6 +290,11 @@ long double PEval(int line, const char *expr) {
 
 void PStartup() {
     CStartup();
+    memset(x_pri, -1, sizeof(x_pri));
+    x_pri[0] = 0;
+    x_pri['+'] = x_pri['-'] = (1 << 1) + 0;
+    x_pri['*'] = x_pri['/'] = (2 << 1) + 0;
+    x_pri['^'] = (3 << 1) + 1;
 }
 
 void PCleanup() {

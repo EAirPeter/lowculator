@@ -8,5 +8,7 @@
 #   define nullptr  NULL
 #endif
 
+#define UNUSED(x_) ((void) sizeof((ptrdiff_t) x_))
+
 #endif
 

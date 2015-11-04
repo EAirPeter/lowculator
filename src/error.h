@@ -33,6 +33,8 @@ int ESyntaxUndefined        (int lne, int col, const char *tok);
 
 int ESyntaxMismatch         (int lne, int col);
 
+int ESyntaxIllegal          (int lne);
+
 int EMath                   (int lne);
 
 #endif
