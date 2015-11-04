@@ -19,6 +19,7 @@
             ESet(E_SYNTAX);                                             \
             return 0.0L;                                                \
         }                                                               \
+        ESet(E_SUCCESS);                                                \
         return mapped_(CONCAT(PARS_, pars_));                           \
         UNUSED(argv);                                                   \
     }
@@ -117,6 +118,7 @@ DEFFUN(round    , roundl    , 1)
             ESet(E_SYNTAX);                                             \
             return 0.0L;                                                \
         }                                                               \
+        ESet(E_SUCCESS);                                                \
         return COVNAME(name_);                                          \
         UNUSED(argv);                                                   \
     }
