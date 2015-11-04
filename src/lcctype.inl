@@ -1,9 +1,3 @@
-#ifndef LOWCULATOR_LCCTYPE_INL_
-#define LOWCULATOR_LCCTYPE_INL_
-
-#include <stdint.h>
-#include <string.h>
-
 #define C_DIG   0x00000001 
 #define C_DIB   0x00000002
 #define C_DIO   0x00000004
@@ -59,7 +53,7 @@ static inline bool CIsWS(int chr) {
     return cx_type[chr] & C_WSP;
 }
 
-void CInit() {
+void CStartup() {
     memset(cx_type, 0, sizeof(cx_type));
     for (int i = '0'; i <= '1'; ++i)
         cx_type[i] |= C_DIB;
@@ -87,5 +81,6 @@ void CInit() {
         cx_type[wsps[i]] |= C_WSP;
 }
 
-#endif
+void CCleanup() {
+}
 

@@ -3,30 +3,9 @@
 
 #include "common.h"
 
-#define ET_NUMBER   0
-#define ET_OPERATOR 1
-#define ET_FUNCALL  2
+void        PStartup();
 
-typedef struct Element_ Element;
-
-struct Element_ {
-    int      type;
-    Element *next;
-    union {
-        struct {
-            long double val;
-        } num;
-        struct {
-            int val;
-        } opr;
-        struct {
-            char    *name;
-            Element *pars;
-        } fcl;
-    };
-};
-
-void        PInit();
+void        PCleanup();
 
 long double PEval(int line, const char *expr);
 

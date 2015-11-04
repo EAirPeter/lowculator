@@ -1,42 +1,46 @@
 #include "parse.h"
 
 #include "error.h"
+#include "functions.h"
 
-#include "lcctype.inl"
-
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tgmath.h>
+#include <string.h>
 
-int           x_lne;
-int           x_col;
-int           x_sca;
-const char   *x_src;
+#include "lcctype.inl"
 
-#define BUF_SIZE  256
+int         x_lne;
+int         x_col;
+int         x_sca;
+const char *x_src;
 
-long double   x_pval;
-char          x_pstr[BUF_SIZE];
+#define BUF_SIZE  256U
 
+long double x_pval;
+char        x_pstr[BUF_SIZE];
 
-#define ARG_MAX   4
+#define ARG_MAX   4U
 
-#define E_ECHAR(c_)         \
-    ESyntaxExpectChar(x_lne, x_col, *x_src, c_)
-#define E_ENAME()           \
-    ESyntaxExpectName(x_lne, x_col, *x_src)
-#define E_ENUMBER()         \
-    ESyntaxExpectNumber(x_lne, x_col, *x_src)
-#define E_UCHAR()           \
-    ESyntaxUnexpectedChar(x_lne, x_col, *x_src)
-#define E_UEOF()            \
-    ESyntaxUnexpectedEOF(x_lne, x_col)
-#define E_USLEN()           \
-    EUnsupportedLength(x_lne, x_col)
-
-typedef long double (*Function_)(long double *, int);
-
-Function_ FUNMANAGER(const char *);
+#define E_ECHAR(c_) \
+    ESyntaxExpectChar       (x_lne, x_col, *x_src,  c_)
+#define E_ENAME()   \
+    ESyntaxExpectName       (x_lne, x_col, *x_src)
+#define E_ENUMBER() \
+    ESyntaxExpectNumber     (x_lne, x_col, *x_src)
+#define E_UCHAR()   \
+    ESyntaxUnexpectedChar   (x_lne, x_col, *x_src)
+#define E_UEOF()    \
+    ESyntaxUnexpectedEOF    (x_lne, x_col)
+#define E_ULEN()    \
+    ESyntaxUnexpectedLength (x_lne, x_col)
+#define E_UNDEF()   \
+    ESyntaxUndefined        (x_lne, x_col, x_pstr)
+#define E_MISM()    \
+    ESyntaxMismatch         (x_lne, x_col)
+#define E_HMATH()   \
+    EMath                   (x_lne)
 
 //FWD
         int     X_EvalExpression();
@@ -55,7 +59,7 @@ inline  int     XXX_ToDigit(int chr);
 int X_EvalExpression() {
     long double buf[ARG_MAX];
     int res = E_SUCCESS;
-    int tmp;
+    size_t len;
     while (*x_src && *x_src != ')') {
         switch (*x_src) {
         case '+':
@@ -93,26 +97,31 @@ int X_EvalExpression() {
                 //=>X_EvalFunctionCall
                 if ((res = X_ParseName()))
                     return res;
-                Function_ fun = FUNMANAGER(x_pstr);
+                MathFunction *fun = FGetFunction(x_pstr);
+                if (!fun)
+                    return E_UNDEF();
                 if (!XX_ParseChar('('))
                     return E_ECHAR('(');
-                for (tmp = 0; tmp < ARG_MAX; ++tmp) {
+                for (len = 0; len < ARG_MAX; ++len) {
                     if (!XX_Next())
                         return E_UEOF();
                     if (*x_src == ')')
                         break;
                     if ((res = X_EvalExpression()))
                         return res;
-                    buf[tmp] = x_pval;
+                    buf[len] = x_pval;
                     if (!XX_ParseChar(','))
                         break;
                 }
                 if (!XX_ParseChar(')'))
                     E_ECHAR(')');
                 XX_Next();
-                x_pval = fun(buf, tmp);
-                if (ELast())
-                    return ELast();
+                x_pval = fun(buf, len);
+                int e = ELast();
+                if (e == E_SYNTAX)
+                    return E_MISM();
+                if (e == E_MATH)
+                    return E_HMATH();
                 //pushvalue: x_pval
             }
             break;
@@ -128,7 +137,7 @@ int X_ParseName() {
     while (CIsName(XX_Read()));
     ptrdiff_t len = x_src - from;
     if (len > BUF_SIZE)
-        return E_USLEN();
+        return E_ULEN();
     strncpy(x_pstr, from, (size_t) len);
     x_pstr[len] = '\0';
     return E_SUCCESS;
@@ -254,5 +263,13 @@ long double PEval(int line, const char *expr) {
     if (!X_EvalExpression())
         ESuccess();
     return x_pval;
+}
+
+void PStartup() {
+    CStartup();
+}
+
+void PCleanup() {
+    CCleanup();
 }
 

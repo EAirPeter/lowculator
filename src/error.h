@@ -6,7 +6,10 @@
 #define E_SUCCESS       0
 #define E_SYNTAX        1
 #define E_MATH          2
-#define E_UNSUPPORTED   3
+
+void EStartup();
+
+void ECleanup();
 
 const char *EMessage();
 
@@ -14,17 +17,23 @@ int ELast();
 
 int ESuccess();
 
-int ESyntaxExpectChar(int lne, int col, int fnd, int exp);
+int ESyntaxExpectChar       (int lne, int col, int fnd, int exp);
 
-int ESyntaxExpectName(int lne, int col, int fnd);
+int ESyntaxExpectName       (int lne, int col, int fnd);
 
-int ESyntaxExpectNumber(int lne, int col, int fnd);
+int ESyntaxExpectNumber     (int lne, int col, int fnd);
 
-int ESyntaxUnexpectedChar(int lne, int col, int fnd);
+int ESyntaxUnexpectedChar   (int lne, int col, int fnd);
 
-int ESyntaxUnexpectedEOF(int lne, int col);
+int ESyntaxUnexpectedEOF    (int lne, int col);
 
-int EUnsupportedLength(int lne, int col);
+int ESyntaxUnexpectedLength (int lne, int col);
+
+int ESyntaxUndefined        (int lne, int col, const char *tok);
+
+int ESyntaxMismatch         (int lne, int col);
+
+int EMath                   (int lne);
 
 #endif
 
