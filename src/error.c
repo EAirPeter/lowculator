@@ -63,8 +63,8 @@ int ESyntaxUndefined(int lne, int col, const char *tok) {
     return x_elno = E_SYNTAX;
 }
 
-int ESyntaxMismatch(int lne, int col) {
-    X_MSGSTRING("the function does not accept the given argument list.");
+int ESyntaxImproper(int lne, int col) {
+    X_MSGSTRING("improper use of the function or constant.");
     return x_elno = E_SYNTAX;
 }
 

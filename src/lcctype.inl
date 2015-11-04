@@ -73,8 +73,8 @@ void CStartup() {
     int oprs[5] = {'+', '-', '*', '/', '^'};
     for (int i = 0; i < 5; ++i)
         cx_type[oprs[i]] |= C_STR | C_OPR;
-    int strs[2] = {'(', ')'};
-    for (int i = 0; i < 2; ++i)
+    int strs[3] = {'\0', '(', ')'};
+    for (int i = 0; i < 3; ++i)
         cx_type[strs[i]] |= C_STR;
     int wsps[3] = {' ', '\t'};
     for (int i = 0; i < 2; ++i)

@@ -31,7 +31,7 @@ int ESyntaxUnexpectedLength (int lne, int col);
 
 int ESyntaxUndefined        (int lne, int col, const char *tok);
 
-int ESyntaxMismatch         (int lne, int col);
+int ESyntaxImproper         (int lne, int col);
 
 int ESyntaxIllegal          (int lne);
 

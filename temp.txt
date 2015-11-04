@@ -57,7 +57,7 @@ HEADERS:
     HEXADECIMAL_HEADER:
         "0x"
 
-X_FLOATING:                 (X_INTEGER)(\.(X_DIGITS)+)?([Ee](INTEGER))?(WS)
+X_FLOATING:                 (X_INTEGER)(\.(X_DIGITS)+)?(\.?[Ee](INTEGER))?(WS)
 X_INTEGER:                  [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
 PARENTHESIZED_EXPRESSION:   \((WS)(EXPRESSION)\)(WS)
 OPR:                        [\+\-\*\/\^](WS)
