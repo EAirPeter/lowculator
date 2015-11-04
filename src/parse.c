@@ -136,7 +136,6 @@ int X_EvalExpression() {
                     }
                     else
                         x_pval = fun(nullptr, 0);
-                    int e = ELast();
                     if (ELast())
                         XEE_RET(E_IMPROPER());
                     if (x_pval == NAN || x_pval == -NAN)
