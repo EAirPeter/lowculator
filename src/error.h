@@ -15,6 +15,8 @@ const char *EMessage();
 
 int ELast();
 
+int ESet(int err);
+
 int ESuccess();
 
 int ESyntaxExpectChar       (int lne, int col, int fnd, int exp);

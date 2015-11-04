@@ -23,6 +23,10 @@ int ELast() {
     return x_elno;
 }
 
+int ESet(int err) {
+    return x_elno = err;
+}
+
 int ESuccess() {
     strcpy(x_emsg, "Succeess.");
     return x_elno = E_SUCCESS;

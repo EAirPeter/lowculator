@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #define C_DIG   0x00000001 
 #define C_DIB   0x00000002
 #define C_DIO   0x00000004

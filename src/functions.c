@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lcmath.inl"
+
 typedef struct X_Node_ X_Node;
 
 struct X_Node_ {
@@ -50,6 +52,7 @@ bool FAddFunction(const char *name, MathFunction *func) {
 
 void FStartup() {
     memset(x_map, 0, sizeof(x_map));
+    ADD_MATH;
 }
 
 void FCleanup() {

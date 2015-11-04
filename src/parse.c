@@ -5,7 +5,6 @@
 #include "stack.h"
 
 #include <math.h>
-#include <stdint.h>
 #include <string.h>
 #include <tgmath.h>
 
@@ -138,9 +137,9 @@ int X_EvalExpression() {
                     else
                         x_pval = fun(nullptr, 0);
                     int e = ELast();
-                    if (e == E_SYNTAX)
+                    if (ELast())
                         XEE_RET(E_IMPROPER());
-                    if (e == E_MATH)
+                    if (x_pval == NAN || x_pval == -NAN)
                         XEE_RET(E_HMATH());
                     SPushVal(sval, x_pval);
                     x_lav = true;
