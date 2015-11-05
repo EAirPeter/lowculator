@@ -140,7 +140,7 @@ int X_EvalExpression() {
                     }
                     else
                         x_pval = fun(nullptr, 0);
-                    if (ELast())
+                    if (errno)
                         XEE_RET(E_IMPROPER());
                     if (!isfinite(x_pval))
                         XEE_RET(E_HMATH());

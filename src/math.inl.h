@@ -13,10 +13,10 @@
 #define DEFFUN(name_, mapped_, pars_)                                   \
     long double FUNNAME(name_)(long double *argv, size_t argc) {        \
         if (argc != (pars_)) {                                          \
-            ESet(E_SYNTAX);                                             \
+            errno = E_SYNTAX;                                           \
             return 0.0L;                                                \
         }                                                               \
-        ESet(E_SUCCESS);                                                \
+        errno = E_SUCCESS;                                              \
         return mapped_(CONCAT(PARS_, pars_));                           \
         UNUSED(argv);                                                   \
     }
@@ -112,10 +112,10 @@ DEFFUN(round    , roundl    , 1)
     long double COVNAME(name_);                                         \
     long double COFNAME(name_)(long double *argv, size_t argc) {        \
         if (argc) {                                                     \
-            ESet(E_SYNTAX);                                             \
+            errno = E_SYNTAX;                                           \
             return 0.0L;                                                \
         }                                                               \
-        ESet(E_SUCCESS);                                                \
+        errno = E_SUCCESS;                                              \
         return COVNAME(name_);                                          \
         UNUSED(argv);                                                   \
     }

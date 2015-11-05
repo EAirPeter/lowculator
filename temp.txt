@@ -84,15 +84,17 @@ DIRECTIVES:
         =>Process the given file which contains EXPRESSIONs and DIRECTIVEs.
 
     DIR_PRECISION:          precision (EXPRESSION)
-        =>Specify the precision (round to integer) of the result to print. (default 8)
+        =>Specify the precision (round to integer, non-negative and less than 20) of the result to print. (default 8)
 
     DIR_OUTPUT:             output (FILENAME)
         =>Close the current output (except stdout), and print following output to the given file. (default stdout)
 
     DIR_PANIC:              panic (on|off)
-        =>Turn on/off the panic mode. If turned on, any failed operation shall cause ther program exit.
+        =>Turn on/off the panic mode. If turned on, any failed operation shall cause ther program exit. (default off)
 
 FILENAME:
     "--"                    stdin or stdout.
     a string.               the path to a file.
+
+//SEDFPC
 

@@ -3,19 +3,21 @@
 
 #include "common.h"
 
+#include <errno.h>
+
+#ifdef      EINVAL
+#   define  E_SYNTAX        EINVAL
+#else
+#   define  E_SYNTAX        1
+#endif
+
 #define E_SUCCESS       0
-#define E_SYNTAX        1
-#define E_MATH          2
 
 void EStartup();
 
 void ECleanup();
 
 const char *EMessage();
-
-int ELast();
-
-int ESet(int err);
 
 int EContext(const char *ctxname);
 

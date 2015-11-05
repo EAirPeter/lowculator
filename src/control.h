@@ -3,17 +3,23 @@
 
 #include "common.h"
 
-int         CEof();
+void CStartup();
 
-int         CEvaluate(int line, int column, const char *expr);
+void CCleanup();
 
-int         CFile(const char *filename);
+int CEof();
 
-int         COutput(const char *filename);
+int CDirective(int line, int column, const char *dire);
 
-int         CPanic(int line, int column, const char *val);
+int CEvaluate(int line, int column, const char *expr);
 
-int         CPrecision(int prec);
+int CFile(const char *filename);
+
+int COutput(const char *filename);
+
+int CPanic(int line, int column, const char *val);
+
+int CPrecision(int line, int prec);
 
 #endif
 
