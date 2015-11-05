@@ -15,6 +15,8 @@ int CEvaluate(int line, int column, const char *expr);
 
 int CFile(const char *filename);
 
+int CNextLine(char *buff, size_t size);
+
 int COutput(const char *filename);
 
 int CPanic(int line, int column, const char *val);

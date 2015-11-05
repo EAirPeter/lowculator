@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define BUF_SIZE 256
+#define BUF_SIZE 256U
 
 char    x_emsg[BUF_SIZE];
 char    x_cont[BUF_SIZE];

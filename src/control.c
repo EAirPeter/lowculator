@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUF_SIZE    256
+#define BUF_SIZE    256U
 
 char    x_fmt[BUF_SIZE];
 
@@ -22,6 +22,15 @@ bool    x_pnc;
 static inline void X_FClose(FILE *f) {
     if (f != stdin && f != stdout)
         errno = fclose(f);
+}
+
+int CNextLine(char *buff, size_t size) {
+    while (x_cur && !fgets(buff, (int) size, x_cur))
+        if (!CEof())
+            exit(errno);
+    if (!x_cur)
+        return EOF;
+    return E_SUCCESS;
 }
 
 int CEof() {
