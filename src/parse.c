@@ -70,7 +70,7 @@ int X_EvalExpression() {
     size_t len;
     Stack *sval = SCreate();
     Stack *sopr = SCreate();
-    while (*x_src && *x_src != ')') {
+    while (*x_src && *x_src != ',' && *x_src != ')') {
         switch (*x_src) {
             case '+':
             case '-':
@@ -100,9 +100,6 @@ int X_EvalExpression() {
                 SPushVal(sval, x_pval);
                 XX_Next();
                 x_lav = true;
-                break;
-            case ')':
-                //Never reach here
                 break;
             default:
                 if (CIsDigD(*x_src)) {
@@ -140,7 +137,7 @@ int X_EvalExpression() {
                         x_pval = fun(nullptr, 0);
                     if (ELast())
                         XEE_RET(E_IMPROPER());
-                    if (x_pval == NAN || x_pval == -NAN)
+                    if (!isfinite(x_pval))
                         XEE_RET(E_HMATH());
                     SPushVal(sval, x_pval);
                     x_lav = true;
@@ -335,7 +332,7 @@ int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
             default:
                 return E_ILLEGAL();
         }
-        if (res == NAN || res == -NAN)
+        if (!isfinite(res))
             return E_HMATH();
         SPushVal(sval, res);
     }
@@ -356,7 +353,7 @@ long double PEval(int line, const char *expr) {
 }
 
 void PStartup() {
-    CStartup();
+    INIT_CTYPE;
     memset(x_pri, -1, sizeof(x_pri));
     x_pri[0] = 0;
     x_pri['+'] = x_pri['-'] = (1 << 1) + 0;
@@ -365,6 +362,5 @@ void PStartup() {
 }
 
 void PCleanup() {
-    CCleanup();
 }
 

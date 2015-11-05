@@ -130,12 +130,10 @@ DEFFUN(round    , roundl    , 1)
 
 DEFCON(pi)
 DEFCON(e)
-DEFCON(nan)
 
 #define ADD_CONST do {          \
     ADDCON(pi, acosl(-1.0L));   \
     ADDCON(e, expl(1.0L));      \
-    ADDCON(nan, nanl("")); \
 } while (false)
 
 #define ADD_MATH do {   \

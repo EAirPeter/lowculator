@@ -55,34 +55,31 @@ static inline bool CIsWS(int chr) {
     return cx_type[chr] & C_WSP;
 }
 
-void CStartup() {
-    memset(cx_type, 0, sizeof(cx_type));
-    for (int i = '0'; i <= '1'; ++i)
-        cx_type[i] |= C_DIB;
-    for (int i = '0'; i <= '7'; ++i)
-        cx_type[i] |= C_DIO;
-    for (int i = 'A'; i <= 'F'; ++i)
-        cx_type[i] |= C_DIG | C_DIH;
-    for (int i = 'a'; i <= 'f'; ++i)
-        cx_type[i] |= C_DIG | C_DIH;
-    for (int i = '0'; i <= '9'; ++i)
-        cx_type[i] |= C_NAM | C_DIG | C_DID | C_DIH;
-    for (int i = 'A'; i <= 'Z'; ++i)
-        cx_type[i] |= C_NAM | C_ALP | C_UPR;
-    for (int i = 'a'; i <= 'z'; ++i)
-        cx_type[i] |= C_NAM | C_ALP | C_LWR;
-    cx_type['_'] |= C_NAM;
-    int oprs[5] = {'+', '-', '*', '/', '^'};
-    for (int i = 0; i < 5; ++i)
-        cx_type[oprs[i]] |= C_STR | C_OPR;
-    int strs[3] = {'\0', '(', ')'};
-    for (int i = 0; i < 3; ++i)
-        cx_type[strs[i]] |= C_STR;
-    int wsps[3] = {' ', '\t'};
-    for (int i = 0; i < 2; ++i)
-        cx_type[wsps[i]] |= C_WSP;
-}
-
-void CCleanup() {
-}
+#define INIT_CTYPE do {                                 \
+    memset(cx_type, 0, sizeof(cx_type));                \
+    for (int i = '0'; i <= '1'; ++i)                    \
+        cx_type[i] |= C_DIB;                            \
+    for (int i = '0'; i <= '7'; ++i)                    \
+        cx_type[i] |= C_DIO;                            \
+    for (int i = 'A'; i <= 'F'; ++i)                    \
+        cx_type[i] |= C_DIG | C_DIH;                    \
+    for (int i = 'a'; i <= 'f'; ++i)                    \
+        cx_type[i] |= C_DIG | C_DIH;                    \
+    for (int i = '0'; i <= '9'; ++i)                    \
+        cx_type[i] |= C_NAM | C_DIG | C_DID | C_DIH;    \
+    for (int i = 'A'; i <= 'Z'; ++i)                    \
+        cx_type[i] |= C_NAM | C_ALP | C_UPR;            \
+    for (int i = 'a'; i <= 'z'; ++i)                    \
+        cx_type[i] |= C_NAM | C_ALP | C_LWR;            \
+    cx_type['_'] |= C_NAM;                              \
+    int oprs[5] = {'+', '-', '*', '/', '^'};            \
+    for (int i = 0; i < 5; ++i)                         \
+        cx_type[oprs[i]] |= C_STR | C_OPR;              \
+    int strs[4] = {'\0', ',', '(', ')'};                \
+    for (int i = 0; i < 4; ++i)                         \
+        cx_type[strs[i]] |= C_STR;                      \
+    int wsps[3] = {' ', '\t'};                          \
+    for (int i = 0; i < 2; ++i)                         \
+        cx_type[wsps[i]] |= C_WSP;                      \
+} while (false)
 
