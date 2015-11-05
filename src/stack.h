@@ -5,13 +5,6 @@
 
 typedef struct Stack_ Stack;
 
-typedef union SElement_ SElement;
-
-union SElement_ {
-    int         opr;
-    long double val;
-};
-
 void        SStartup();
 
 void        SCleanup();
@@ -20,17 +13,23 @@ Stack      *SCreate();
 
 void        SDestroy(Stack *stk);
 
-void        SPushOpr(Stack *stk, int         opr);
+void        SPushInt(Stack *stk, int         int_);
 
-void        SPushVal(Stack *stk, long double val);
+void        SPushLdb(Stack *stk, long double ldb_);
 
-int         SPopOpr(Stack *stk);
+void        SPushPtr(Stack *stk, void       *ptr_);
 
-long double SPopVal(Stack *stk);
+int         SPopInt(Stack *stk);
 
-int         STopOpr(Stack *stk);
+long double SPopLdb(Stack *stk);
 
-long double STopVal(Stack *stk);
+void       *SPopPtr(Stack *stk);
+
+int         STopInt(Stack *stk);
+
+long double STopLdb(Stack *stk);
+
+void       *STopPtr(Stack *stk);
 
 bool        SEmpty(Stack *stk);
 

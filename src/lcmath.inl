@@ -3,9 +3,6 @@
 #include <math.h>
 #include <tgmath.h>
 
-#define CONCAT_(a_, b_)     a_ ## b_
-#define CONCAT(a_, b_)      CONCAT_(a_, b_)
-
 #define PARS_1              argv[0]
 #define PARS_2              PARS_1, argv[1]
 #define PARS_3              PARS_2, argv[2]

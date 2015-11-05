@@ -36,6 +36,11 @@ int ESuccess() {
     return x_elno = E_SUCCESS;
 }
 
+int ESyntaxDirective(int lne, int col) {
+    X_MSGSTRING("invalid directive.");
+    return x_elno = E_SYNTAX;
+}
+
 int ESyntaxExpectChar(int lne, int col, int fnd, int exp) {
     X_MSGPRINTF("expected %s, but %s found.", WR(exp), WR(fnd));
     return x_elno = E_SYNTAX;

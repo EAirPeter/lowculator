@@ -10,5 +10,8 @@
 
 #define UNUSED(x_) ((void) sizeof((ptrdiff_t) x_))
 
+#define CONCAT_(a_, b_)     a_ ## b_
+#define CONCAT(a_, b_)      CONCAT_(a_, b_)
+
 #endif
 

@@ -2,7 +2,14 @@
 
 #include <stdlib.h>
 
-typedef struct X_Node_ X_Node;
+typedef struct  X_Node_     X_Node;
+typedef union   SElement_   SElement;
+
+union SElement_ {
+    int         int_;
+    long double ldb_;
+    void       *ptr_;
+};
 
 struct Stack_ {
     X_Node             *top;
@@ -57,42 +64,61 @@ void SDestroy(Stack *stk) {
     x_stks = stk;
 }
 
-void SPushOpr(Stack *stk, int opr) {
+void SPushInt(Stack *stk, int int_) {
     stk->top = X_CreateNode(stk->top);
-    stk->top->ele.opr = opr;
+    stk->top->ele.int_ = int_;
     ++stk->siz;
 }
 
-void SPushVal(Stack *stk, long double val) {
+void SPushLdb(Stack *stk, long double ldb_) {
     stk->top = X_CreateNode(stk->top);
-    stk->top->ele.val = val;
+    stk->top->ele.ldb_ = ldb_;
     ++stk->siz;
 }
 
-int SPopOpr(Stack *stk) {
+void SPushPtr(Stack *stk, void *ptr_) {
+    stk->top = X_CreateNode(stk->top);
+    stk->top->ele.ptr_ = ptr_;
+    ++stk->siz;
+}
+
+int SPopInt(Stack *stk) {
     if (!stk->top)
         return 0;
-    int res = stk->top->ele.opr;
+    int res = stk->top->ele.int_;
     stk->top = X_DestroyNode(stk->top);
     --stk->siz;
     return res;
 }
 
-long double SPopVal(Stack *stk) {
+long double SPopLdb(Stack *stk) {
     if (!stk->top)
         return 0.0L;
-    long double res = stk->top->ele.val;
+    long double res = stk->top->ele.ldb_;
     stk->top = X_DestroyNode(stk->top);
     --stk->siz;
     return res;
 }
 
-int STopOpr(Stack *stk) {
-    return stk->top ? stk->top->ele.opr : 0;
+void *SPopPtr(Stack *stk) {
+    if (!stk->top)
+        return nullptr;
+    void *res = stk->top->ele.ptr_;
+    stk->top = X_DestroyNode(stk->top);
+    --stk->siz;
+    return res;
 }
 
-long double STopVal(Stack *stk) {
-    return stk->top ? stk->top->ele.val : 0.0L;
+int STopInt(Stack *stk) {
+    return stk->top ? stk->top->ele.int_ : 0;
+}
+
+long double STopLdb(Stack *stk) {
+    return stk->top ? stk->top->ele.ldb_ : 0.0L;
+}
+
+void *STopPtr(Stack *stk) {
+    return stk->top ? stk->top->ele.ptr_ : nullptr;
 }
 
 bool SEmpty(Stack *stk) {

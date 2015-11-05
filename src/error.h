@@ -19,6 +19,8 @@ int ESet(int err);
 
 int ESuccess();
 
+int ESyntaxDirective        (int lne, int col);
+
 int ESyntaxExpectChar       (int lne, int col, int fnd, int exp);
 
 int ESyntaxExpectName       (int lne, int col, int fnd);

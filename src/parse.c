@@ -14,37 +14,41 @@ int         x_lne;
 int         x_col;
 int         x_sca;
 const char *x_src;
+const char *x_cur;
 bool        x_lav;
 
-#define BUF_SIZE  256U
+#define BUF_SIZE    256U
 
 long double x_pval;
 char        x_pstr[BUF_SIZE];
 
 int         x_pri[256];
 
-#define ARG_MAX   4U
+#define ARG_MAX     4U
+
+#define LNE         (x_lne)
+#define COL         (x_col + (int)(x_cur - x_src))
 
 #define E_ECHAR(c_) \
-    ESyntaxExpectChar       (x_lne, x_col, *x_src,  c_)
+    ESyntaxExpectChar       (LNE, COL, *x_cur,  c_)
 #define E_ENAME()   \
-    ESyntaxExpectName       (x_lne, x_col, *x_src)
+    ESyntaxExpectName       (LNE, COL, *x_cur)
 #define E_ENUMBER() \
-    ESyntaxExpectNumber     (x_lne, x_col, *x_src)
+    ESyntaxExpectNumber     (LNE, COL, *x_cur)
 #define E_UCHAR()   \
-    ESyntaxUnexpectedChar   (x_lne, x_col, *x_src)
+    ESyntaxUnexpectedChar   (LNE, COL, *x_cur)
 #define E_UTERM()   \
-    ESyntaxUnexpectedTerm   (x_lne, x_col)
+    ESyntaxUnexpectedTerm   (LNE, COL)
 #define E_ULEN()    \
-    ESyntaxUnexpectedLength (x_lne, x_col)
+    ESyntaxUnexpectedLength (LNE, COL)
 #define E_UNDEF()   \
-    ESyntaxUndefined        (x_lne, x_col, x_pstr)
+    ESyntaxUndefined        (LNE, COL, x_pstr)
 #define E_IMPROPER()\
-    ESyntaxImproper         (x_lne, x_col)
+    ESyntaxImproper         (LNE, COL)
 #define E_ILLEGAL() \
-    ESyntaxIllegal          (x_lne)
+    ESyntaxIllegal          (LNE)
 #define E_HMATH()   \
-    EMath                   (x_lne)
+    EMath                   (LNE)
 
 //FWD
 int     X_EvalExpression();
@@ -70,14 +74,14 @@ int X_EvalExpression() {
     size_t len;
     Stack *sval = SCreate();
     Stack *sopr = SCreate();
-    while (*x_src && *x_src != ',' && *x_src != ')') {
-        switch (*x_src) {
+    while (*x_cur && *x_cur != ',' && *x_cur != ')') {
+        switch (*x_cur) {
             case '+':
             case '-':
                 if (!x_lav && CIsDigD(XX_Peek())) {
                     if ((res = X_ParseNumber()))
                         XEE_RET(res);
-                    SPushVal(sval, x_pval);
+                    SPushLdb(sval, x_pval);
                     x_lav = true;
                     break;
                 }
@@ -87,7 +91,7 @@ int X_EvalExpression() {
             case '^':
                 if (!x_lav)
                     XEE_RET(E_UCHAR());
-                if ((res = XXX_PushOpr(sopr, sval, *x_src)))
+                if ((res = XXX_PushOpr(sopr, sval, *x_cur)))
                     XEE_RET(res);
                 XX_Next();
                 x_lav = false;
@@ -98,17 +102,17 @@ int X_EvalExpression() {
                     XEE_RET(res);
                 if (!XX_ParseChar(')'))
                     XEE_RET(E_ECHAR(')'));
-                SPushVal(sval, x_pval);
+                SPushLdb(sval, x_pval);
                 XX_Next();
                 x_lav = true;
                 break;
             default:
-                if (CIsDigD(*x_src)) {
+                if (CIsDigD(*x_cur)) {
                     if ((res = X_ParseNumber()))
                         XEE_RET(res);
-                    SPushVal(sval, x_pval);
+                    SPushLdb(sval, x_pval);
                     x_lav = true;
-                } else if(CIsAlpha(*x_src)) {
+                } else if(CIsAlpha(*x_cur)) {
                     //=>X_EvalFunctionCall
                     if ((res = X_ParseName()))
                         XEE_RET(res);
@@ -119,7 +123,7 @@ int X_EvalExpression() {
                         for (len = 0; len < ARG_MAX; ++len) {
                             if (!XX_Next())
                                 XEE_RET(E_UTERM());
-                            if (*x_src == ')')
+                            if (*x_cur == ')')
                                 break;
                             if ((res = X_EvalExpression()))
                                 XEE_RET(res);
@@ -140,7 +144,7 @@ int X_EvalExpression() {
                         XEE_RET(E_IMPROPER());
                     if (!isfinite(x_pval))
                         XEE_RET(E_HMATH());
-                    SPushVal(sval, x_pval);
+                    SPushLdb(sval, x_pval);
                     x_lav = true;
                 }
                 else
@@ -152,16 +156,16 @@ int X_EvalExpression() {
         XEE_RET(res);
     if (!x_lav || SSize(sopr) != 1 || SSize(sval) != 1)
         XEE_RET(E_ILLEGAL());
-    x_pval = STopVal(sval);
+    x_pval = STopLdb(sval);
     XEE_RET(E_SUCCESS);
 }
 
 int X_ParseName() {
-    if (!CIsAlpha(*x_src))
+    if (!CIsAlpha(*x_cur))
         return E_ENAME();
-    const char *from = x_src;
+    const char *from = x_cur;
     while (CIsName(XX_Read()));
-    ptrdiff_t len = x_src - from;
+    ptrdiff_t len = x_cur - from;
     if (len > BUF_SIZE)
         return E_ULEN();
     strncpy(x_pstr, from, (size_t) len);
@@ -175,7 +179,7 @@ int X_ParseNumber() {
         return res;
     long double val = x_pval;
     int sca = x_sca;
-    if (*x_src == '.') {
+    if (*x_cur == '.') {
         int dig;
         long double coe = 1.0L / x_sca;
         if ((dig = XXX_ToDigit(XX_Read())) == -1)
@@ -193,31 +197,31 @@ int X_ParseNumber() {
                 dig = XXX_ToDigit(XX_Read());
             }
     }
-    if (*x_src == '.' && XX_Read() != 'E' && *x_src != 'e')
+    if (*x_cur == '.' && XX_Read() != 'E' && *x_cur != 'e')
         return E_ENUMBER();
-    if (*x_src == 'E' || *x_src == 'e') {
+    if (*x_cur == 'E' || *x_cur == 'e') {
         XX_Read();
         if ((res = X_ParseInteger()))
             return res;
         val *= powl(sca, x_pval);
     }
-    if (CIsName(*x_src))
+    if (CIsName(*x_cur))
         return E_UCHAR();
-    if (CIsWS(*x_src))
+    if (CIsWS(*x_cur))
         XX_Next();
-    if (!CIsStructural(*x_src))
+    if (!CIsStructural(*x_cur))
         return E_UCHAR();
     x_pval = val;
     return E_SUCCESS;
 }
 
 int X_ParseInteger() {
-    bool neg = *x_src == '-';
-    if (neg || *x_src == '+')
+    bool neg = *x_cur == '-';
+    if (neg || *x_cur == '+')
         XX_Read();
-    if (!*x_src)
+    if (!*x_cur)
         return E_UTERM();
-    if (*x_src == '0') {
+    if (*x_cur == '0') {
         switch (XX_Read()) {
             case 'b':
                 x_sca = 2;
@@ -232,7 +236,7 @@ int X_ParseInteger() {
                 x_pval = 0.0L;
                 return E_SUCCESS;
             default:
-                if (CIsDigO(*x_src))
+                if (CIsDigO(*x_cur))
                     x_sca = 8;
                 else {
                     x_sca = 10;
@@ -244,14 +248,14 @@ int X_ParseInteger() {
     }
     else
         x_sca = 10;
-    if (*x_src == '0') {
+    if (*x_cur == '0') {
         XX_Read();
         x_pval = 0.0L;
         return E_SUCCESS;
     }
     int dig = 0;
     long double val = 0.0L;
-    if ((dig = XXX_ToDigit(*x_src)) == -1)
+    if ((dig = XXX_ToDigit(*x_cur)) == -1)
         return E_ENUMBER();
     while (dig != -1) {
         val = val * x_sca + dig;
@@ -262,30 +266,25 @@ int X_ParseInteger() {
 }
 
 bool XX_ParseChar(int chr) {
-    if (CIsWS(*x_src))
+    if (CIsWS(*x_cur))
         XX_Next();
-    return *x_src == chr;
+    return *x_cur == chr;
 }
 
 int XX_Read() {
-    if (*x_src) {
-        ++x_col;
-        return *(++x_src);
-    }
-    return 0;
+    return *x_cur ? *(++x_cur) : 0;
 }
 
 int XX_Next() {
-    if (*x_src) {
-        while (*(++x_src) && CIsWS(*x_src))
-            ++x_col;
-        return *x_src;
+    if (*x_cur) {
+        while (*(++x_cur) && CIsWS(*x_cur));
+        return *x_cur;
     }
     return 0;
 }
 
 int XX_Peek() {
-    return *x_src ? *(x_src + 1) : 0;
+    return *x_cur ? *(x_cur + 1) : 0;
 }
 
 int XXX_ToDigit(int chr) {
@@ -308,13 +307,13 @@ bool XXX_ShouldPop(int instack, int topush) {
 }
 
 int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
-    while (!SEmpty(sopr) && XXX_ShouldPop(STopOpr(sopr), opr)) {
+    while (!SEmpty(sopr) && XXX_ShouldPop(STopInt(sopr), opr)) {
         if (SSize(sval) < 2)
             return E_ILLEGAL();
-        long double rhs = SPopVal(sval);
-        long double lhs = SPopVal(sval);
+        long double rhs = SPopLdb(sval);
+        long double lhs = SPopLdb(sval);
         long double res = 0.0L;
-        switch (SPopOpr(sopr)) {
+        switch (SPopInt(sopr)) {
             case '+':
                 res = lhs + rhs;
                 break;
@@ -338,9 +337,9 @@ int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
         }
         if (!isfinite(res))
             return E_HMATH();
-        SPushVal(sval, res);
+        SPushLdb(sval, res);
     }
-    SPushOpr(sopr, opr);
+    SPushInt(sopr, opr);
     return E_SUCCESS;
 }
 
@@ -348,11 +347,11 @@ long double PEval(int line, int column, const char *expr) {
     x_lne = line;
     x_col = column;
     x_src = expr;
+    x_cur = x_src;
     x_lav = false;
-    if (CIsWS(*x_src))
+    if (CIsWS(*x_cur))
         XX_Next();
-    if (!X_EvalExpression())
-        ESuccess();
+    X_EvalExpression();
     return x_pval;
 }
 
