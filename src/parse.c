@@ -8,7 +8,7 @@
 #include <string.h>
 #include <tgmath.h>
 
-#include "lcctype.inl"
+#include "ctype.inl.h"
 
 int         x_lne;
 int         x_col;

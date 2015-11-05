@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lcmath.inl"
+#include "math.inl.h"
 
 typedef struct X_Node_ X_Node;
 
