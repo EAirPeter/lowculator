@@ -27,7 +27,7 @@ int ESyntaxExpectNumber     (int lne, int col, int fnd);
 
 int ESyntaxUnexpectedChar   (int lne, int col, int fnd);
 
-int ESyntaxUnexpectedEOF    (int lne, int col);
+int ESyntaxUnexpectedTerm   (int lne, int col);
 
 int ESyntaxUnexpectedLength (int lne, int col);
 

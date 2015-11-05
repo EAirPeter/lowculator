@@ -33,8 +33,8 @@ int         x_pri[256];
     ESyntaxExpectNumber     (x_lne, x_col, *x_src)
 #define E_UCHAR()   \
     ESyntaxUnexpectedChar   (x_lne, x_col, *x_src)
-#define E_UEOF()    \
-    ESyntaxUnexpectedEOF    (x_lne, x_col)
+#define E_UTERM()   \
+    ESyntaxUnexpectedTerm   (x_lne, x_col)
 #define E_ULEN()    \
     ESyntaxUnexpectedLength (x_lne, x_col)
 #define E_UNDEF()   \
@@ -118,7 +118,7 @@ int X_EvalExpression() {
                     if (XX_ParseChar('(')) {
                         for (len = 0; len < ARG_MAX; ++len) {
                             if (!XX_Next())
-                                XEE_RET(E_UEOF());
+                                XEE_RET(E_UTERM());
                             if (*x_src == ')')
                                 break;
                             if ((res = X_EvalExpression()))
@@ -216,7 +216,7 @@ int X_ParseInteger() {
     if (neg || *x_src == '+')
         XX_Read();
     if (!*x_src)
-        return E_UEOF();
+        return E_UTERM();
     if (*x_src == '0') {
         switch (XX_Read()) {
             case 'b':
@@ -344,9 +344,9 @@ int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
     return E_SUCCESS;
 }
 
-long double PEval(int line, const char *expr) {
+long double PEval(int line, int column, const char *expr) {
     x_lne = line;
-    x_col = 1;
+    x_col = column;
     x_src = expr;
     x_lav = false;
     if (CIsWS(*x_src))

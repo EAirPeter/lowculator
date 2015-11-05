@@ -1,5 +1,6 @@
 #include "error.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 
 char    x_emsg[256];
 int     x_elno = E_SUCCESS;
+char    x_wrap[256][8];
 
 #define X_MSGPRINTF(format_, ...)   \
     sprintf(x_emsg, "At %d:%d, " format_, lne, col, __VA_ARGS__)
@@ -14,6 +16,8 @@ int     x_elno = E_SUCCESS;
     sprintf(x_emsg, "At %d:%d, " string_, lne, col)
 #define X_MSGSTRINL(string_)        \
     sprintf(x_emsg, "At %d:?, " string_, lne)
+
+#define WR(c_) x_wrap[(unsigned char) (c_)]
 
 const char *EMessage() {
     return x_emsg;
@@ -33,27 +37,29 @@ int ESuccess() {
 }
 
 int ESyntaxExpectChar(int lne, int col, int fnd, int exp) {
-    X_MSGPRINTF("expected \'%c\', but '\'%c\' found.", exp, fnd);
+    X_MSGPRINTF("expected %s, but %s found.", WR(exp), WR(fnd));
     return x_elno = E_SYNTAX;
 }
 
 int ESyntaxExpectName(int lne, int col, int fnd) {
-    X_MSGPRINTF("expected FUNCTION_NAME but \'%c\' found.", fnd);
+    X_MSGPRINTF("expected FUNCTION_NAME but %s found.", WR(fnd));
     return x_elno = E_SYNTAX;
 }
 
 int ESyntaxExpectNumber(int lne, int col, int fnd) {
-    X_MSGPRINTF("expected NUMBER but \'%c\' found.", fnd);
+    X_MSGPRINTF("expected NUMBER but %s found.", WR(fnd));
     return x_elno = E_SYNTAX;
 }
 
 int ESyntaxUnexpectedChar(int lne, int col, int fnd) {
-    X_MSGPRINTF("unexpected \'%c\'.", fnd);
+    if (!fnd)
+        return ESyntaxUnexpectedTerm(lne, col);
+    X_MSGPRINTF("unexpected %s.", WR(fnd));
     return x_elno = E_SYNTAX;
 }
 
-int ESyntaxUnexpectedEOF(int lne, int col) {
-    X_MSGSTRING("unexpected EOF reached.");
+int ESyntaxUnexpectedTerm(int lne, int col) {
+    X_MSGSTRING("unexpected termination.");
     return x_elno = E_SYNTAX;
 }
 
@@ -79,19 +85,24 @@ int ESyntaxIllegal(int lne) {
 
 int EMath(int lne) { 
     switch (errno) {
-    case EDOM:
-        X_MSGSTRINL("domain error occured");
-        break;
-    case ERANGE:
-        X_MSGSTRINL("range error occured");
-        break;
-    default:
-        break;
+        case EDOM:
+            X_MSGSTRINL("domain error occured");
+            break;
+        case ERANGE:
+            X_MSGSTRINL("range error occured");
+            break;
+        default:
+            break;
     }
     return x_elno = E_MATH;
 }
 
 void EStartup() {
+    for (int i = 0; i < 256; ++i)
+        if (isprint(i))
+            sprintf(WR(i), "\'%c\'", i);
+        else
+            sprintf(WR(i), "\'\\x%02x\'", i);
 }
 
 void ECleanup() {

@@ -7,7 +7,7 @@ void        PStartup();
 
 void        PCleanup();
 
-long double PEval(int line, const char *expr);
+long double PEval(int line, int column, const char *expr);
 
 #endif
 
