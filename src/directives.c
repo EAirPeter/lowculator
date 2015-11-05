@@ -58,16 +58,6 @@ DEFDIR(file) {
     return CFile(x_cur);
 }
 
-DEFDIR(format) {
-    while (*x_cur && !isgraph(*x_cur))
-        ++x_cur;
-    return CFormat(x_cur);
-}
-
-DEFDIR(interactive) {
-    return CInteractive();
-}
-
 DEFDIR(output) {
     while (*x_cur && !isgraph(*x_cur))
         ++x_cur;
@@ -78,6 +68,12 @@ DEFDIR(panic) {
     while (*x_cur && !isgraph(*x_cur))
         ++x_cur;
     return CPanic(LNE, COL, x_cur);
+}
+
+DEFDIR(precision) {
+    while (*x_cur && !isgraph(*x_cur))
+        ++x_cur;
+    return CPrecision((int) lroundl(PEval(LNE, COL, x_cur)));
 }
 
 int DProcess(int line, int column, const char *dire) {
@@ -92,10 +88,9 @@ int DProcess(int line, int column, const char *dire) {
     CHECKDIR(evaluate);
     CHECKDIR(exit);
     CHECKDIR(file);
-    CHECKDIR(format);
-    CHECKDIR(interactive);
     CHECKDIR(output);
     CHECKDIR(panic);
+    CHECKDIR(precision);
     return E_DIR();
 }
 
@@ -104,10 +99,9 @@ void DStartup() {
     INITDIR(evaluate);
     INITDIR(exit);
     INITDIR(file);
-    INITDIR(format);
-    INITDIR(interactive);
     INITDIR(output);
     INITDIR(panic);
+    INITDIR(precision);
 }
 
 void DCleanup() {

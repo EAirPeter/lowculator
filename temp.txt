@@ -5,9 +5,9 @@ COMMANDLINE:
     EXECUTABLE              (EXECUTABLE) (DEFUALT_COMMAND)
     EXECUTABLE COMMANDS     process all commands one by one.
 COMMANDS:
+    -c EXPRESSION           #precision EXPRESSION
     -e EXPRESSION           #evaluate EXPRESSION
     -f FILENAME             #file FILENAME
-    -m FORMAT               #format FORMAT
     -o FILENAME             #output EXPRESSION
     -p (on|off)             #p (on|off)
     -x EXPRESSION           #exit EXPRESSION
@@ -27,7 +27,7 @@ EXPRESSION:
     PARENTHESIZED_EXPRESSION
     NUMBER
     EXPRESSION OPR EXPRESSION
-    FUNCTION_CALL
+    INVOCATION
 NUMBER:
     BINARY_FLOATING
     OCTAL_FLOATING
@@ -55,7 +55,7 @@ HEADERS:
 
 X_FLOATING:                 (X_INTEGER)(\.(X_DIGITS)+)?(\.?[Ee](INTEGER))?(WS)
 X_INTEGER:                  [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
-PARENTHESIZED_EXPRESSION:   \((WS)(EXPRESSION)\)(WS)
+PARENTHESIZED_EXPRESSION:   \(((EXPRESSION)\)(WS)
 OPR:                        [\+\-\*\/\%\^](WS)
 INVOCATION:
     FUNCTION:               (FUNCTION_NAME)(WS)\(EXPRESSION(,(EXPRESSION))?\)(WS)
@@ -71,16 +71,28 @@ CONSTANT_NAME:
 
 DIRECTIVE:                  #(DIRECTIVES)
 DIRECTIVES:
-    DIR_EOF                 eof                       =>End of file. That means, the current input file will be closed immediately (except stdin).
-    DIR_EVALUATE:           evaluate (EXPRESSION)     =>Evaluate an expression and print the result.
-    DIR_EXIT:               exit (EXPRESSION)         =>Exit program with the given exitcode.
-    DIR_FILE:               file (FILENAME)           =>Process the given file.
-    DIR_FORMAT:             format (FORMAT)           =>Specify the format of the result.
-    DIR_OUTPUT:             output (FILENAME)         =>Close the current output (except stdout), and print following output to the given file.
-    DIR_PANIC:              panic (on|off)            =>Turn on/off the panic mode. If turned on, any failed operation shall cause ther program exit.
+    DIR_EOF                 eof
+        =>End of file. That means, the current input file will be closed immediately (except stdin).
+
+    DIR_EVALUATE:           evaluate (EXPRESSION)
+        =>Evaluate an expression and print the result.
+
+    DIR_EXIT:               exit (EXPRESSION)
+        =>Exit program with the given exitcode (round to integer).
+
+    DIR_FILE:               file (FILENAME)
+        =>Process the given file which contains EXPRESSIONs and DIRECTIVEs.
+
+    DIR_PRECISION:          precision (EXPRESSION)
+        =>Specify the precision (round to integer) of the result to print. (default 8)
+
+    DIR_OUTPUT:             output (FILENAME)
+        =>Close the current output (except stdout), and print following output to the given file. (default stdout)
+
+    DIR_PANIC:              panic (on|off)
+        =>Turn on/off the panic mode. If turned on, any failed operation shall cause ther program exit.
+
 FILENAME:
     "--"                    stdin or stdout.
     a string.               the path to a file.
-FORMAT:
-    a string.               a fprintf acceptable format to print a long double.
 
