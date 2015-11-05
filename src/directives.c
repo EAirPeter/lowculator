@@ -73,7 +73,10 @@ DEFDIR(panic) {
 DEFDIR(precision) {
     while (*x_cur && !isgraph(*x_cur))
         ++x_cur;
-    return CPrecision(LNE, (int) lroundl(PEval(LNE, COL, x_cur)));
+    int prec = (int) lroundl(PEval(LNE, COL, x_cur));
+    if (errno)
+        return errno;
+    return CPrecision(LNE, prec);
 }
 
 int DProcess(int line, int column, const char *dire) {

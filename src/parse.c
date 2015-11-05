@@ -351,7 +351,8 @@ long double PEval(int line, int column, const char *expr) {
     x_lav = false;
     if (CIsWS(*x_cur))
         XX_Next();
-    X_EvalExpression();
+    if (!X_EvalExpression())
+        ESuccess();
     return x_pval;
 }
 

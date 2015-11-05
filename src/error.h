@@ -11,6 +11,12 @@
 #   define  E_SYNTAX        1
 #endif
 
+#ifdef      EIO
+#   define E_IO             EIO
+#else
+#   define E_IO             2
+#endif
+
 #define E_SUCCESS       0
 
 void EStartup();

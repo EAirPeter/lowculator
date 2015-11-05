@@ -77,7 +77,7 @@ int CPanic(int line, int column, const char *val) {
 
 int CPrecision(int line, int prec) {
     if (prec >= 0 && prec < 20)
-        sprintf(x_fmt, "%%.%dLf", prec);
+        sprintf(x_fmt, "%%.%dLf\n", prec);
     else {
         errno = EDOM;
         return EMath(line);
@@ -88,7 +88,10 @@ int CPrecision(int line, int prec) {
 int CDirective(int line, int column, const char *dire) {
     int err = DProcess(line, column, dire);
     if (err) {
-        fputs(EMessage(), x_cur);
+        if (fputs(EMessage(), x_out) < 0)
+            exit(E_IO);
+        if (fputc('\n', x_out) < 0)
+            exit(E_IO);
         if (x_pnc)
             exit(err);
     }
@@ -99,12 +102,15 @@ int CEvaluate(int line, int column, const char *expr) {
     long double res = PEval(line, column, expr);
     int err = errno;
     if (err) {
-        fputs(EMessage(), x_cur);
+        if (fputs(EMessage(), x_out) < 0)
+            exit(E_IO);
+        if (fputc('\n', x_out) < 0)
+            exit(E_IO);
         if (x_pnc)
             exit(err);
     }
-    if (fprintf(x_cur, x_fmt, res) < 0)
-        exit(errno);
+    else if (fprintf(x_out, x_fmt, res) < 0)
+        exit(E_IO);
     return E_SUCCESS;
 }
 
