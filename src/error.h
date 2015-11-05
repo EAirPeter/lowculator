@@ -17,6 +17,8 @@ int ELast();
 
 int ESet(int err);
 
+int EContext(const char *ctxname);
+
 int ESuccess();
 
 int ESyntaxDirective        (int lne, int col);

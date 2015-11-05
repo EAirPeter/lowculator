@@ -1,11 +1,30 @@
-#include <stdio.h>
+#include "common.h"
+#include "error.h"
+#include "functions.h"
+#include "parse.h"
 
-#define UNREF(x_) ((void) (sizeof(x_)))
-#define UNREF_PTR(x_) UNREF((void *) x_)
+#include <stdlib.h>
+
+void Cleanup() {
+    ECleanup();
+    FCleanup();
+    PCleanup();
+}
+
+void Startup() {
+    if (atexit(Cleanup))
+        _Exit(-1);
+    if (at_quick_exit(Cleanup))
+        _Exit(-1);
+    EStartup();
+    FStartup();
+    PStartup();
+}
 
 int main(int argc, char *argv[]) {
-    puts("hello world");
-    UNREF(argc);
-    UNREF_PTR(argv);
+    Startup();
+    return 0;
+    UNUSED(argc);
+    UNUSED(argv);
 }
 

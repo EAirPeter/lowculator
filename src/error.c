@@ -6,16 +6,19 @@
 #include <stdio.h>
 #include <string.h>
 
-char    x_emsg[256];
+#define BUF_SIZE 256
+
+char    x_emsg[BUF_SIZE];
 int     x_elno = E_SUCCESS;
+char    x_cont[BUF_SIZE];
 char    x_wrap[256][8];
 
 #define X_MSGPRINTF(format_, ...)   \
-    sprintf(x_emsg, "At %d:%d, " format_, lne, col, __VA_ARGS__)
+    sprintf(x_emsg, "In %s, at %d:%d, " format_, x_cont, lne, col, __VA_ARGS__)
 #define X_MSGSTRING(string_)        \
-    sprintf(x_emsg, "At %d:%d, " string_, lne, col)
+    sprintf(x_emsg, "In %s, At %d:%d, " string_, x_cont, lne, col)
 #define X_MSGSTRINL(string_)        \
-    sprintf(x_emsg, "At %d:?, " string_, lne)
+    sprintf(x_emsg, "In %s, At %d:?, " string_, x_cont, lne)
 
 #define WR(c_) x_wrap[(unsigned char) (c_)]
 
@@ -29,6 +32,10 @@ int ELast() {
 
 int ESet(int err) {
     return x_elno = err;
+}
+
+int EContext(const char *ctxname) {
+    return elno = strcpy_s(x_cont, BUF_SIZE, filename) ? E_SYNTAX : E_SUCCESS;
 }
 
 int ESuccess() {
@@ -103,6 +110,7 @@ int EMath(int lne) {
 }
 
 void EStartup() {
+    EContext("(unknown)");
     for (int i = 0; i < 256; ++i)
         if (isprint(i))
             sprintf(WR(i), "\'%c\'", i);
