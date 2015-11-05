@@ -13,6 +13,8 @@ int CDirective(int line, int column, const char *dire);
 
 int CEvaluate(int line, int column, const char *expr);
 
+_Noreturn int CExit(int line, int column, const char *expr);
+
 int CFile(const char *filename);
 
 int CNextLine(char *buff, size_t size);
@@ -21,7 +23,7 @@ int COutput(const char *filename);
 
 int CPanic(int line, int column, const char *val);
 
-int CPrecision(int line, int prec);
+int CPrecision(int line, int column, const char *expr);
 
 #endif
 

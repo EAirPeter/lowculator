@@ -5,7 +5,6 @@
 #include "parse.h"
 
 #include <ctype.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -49,7 +48,7 @@ DEFDIR(evaluate) {
 DEFDIR(exit, _Noreturn) {
     while (*x_cur && !isgraph(*x_cur))
         ++x_cur;
-    exit((int) lroundl(PEval(LNE, COL, x_cur)));
+    CExit(LNE, COL, x_cur);
 }
 
 DEFDIR(file) {
@@ -73,10 +72,7 @@ DEFDIR(panic) {
 DEFDIR(precision) {
     while (*x_cur && !isgraph(*x_cur))
         ++x_cur;
-    int prec = (int) lroundl(PEval(LNE, COL, x_cur));
-    if (errno)
-        return errno;
-    return CPrecision(LNE, prec);
+    return CPrecision(LNE, COL, x_cur);
 }
 
 int DProcess(int line, int column, const char *dire) {

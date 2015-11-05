@@ -5,6 +5,7 @@
 #include "parse.h"
 #include "stack.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,7 +85,14 @@ int CPanic(int line, int column, const char *val) {
     return ESyntaxUndefined(line, column + (int) strlen(val), val);
 }
 
-int CPrecision(int line, int prec) {
+_Noreturn int CExit(int line, int column, const char *expr) {
+    exit((int) lroundl(PEval(line, column, expr)));
+}
+
+int CPrecision(int line, int column, const char *expr) {
+    int prec = (int) lroundl(PEval(line, column, expr));
+    if (errno)
+        return errno;
     if (prec >= 0 && prec < 20)
         sprintf(x_fmt, "%%.%dLf\n", prec);
     else {

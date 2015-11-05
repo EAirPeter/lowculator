@@ -76,80 +76,81 @@ int X_EvalExpression() {
     Stack *sopr = SCreate();
     while (*x_cur && *x_cur != ',' && *x_cur != ')') {
         switch (*x_cur) {
-            case '+':
-            case '-':
-                if (!x_lav && CIsDigD(XX_Peek())) {
-                    if ((res = X_ParseNumber()))
-                        XEE_RET(res);
-                    SPushLdb(sval, x_pval);
-                    x_lav = true;
-                    break;
-                }
-            case '*':
-            case '/':
-            case '%':
-            case '^':
-                if (!x_lav)
-                    XEE_RET(E_UCHAR());
-                if ((res = XXX_PushOpr(sopr, sval, *x_cur)))
+        case '+':
+        case '-':
+            if (!x_lav && CIsDigD(XX_Peek())) {
+                if ((res = X_ParseNumber()))
                     XEE_RET(res);
-                XX_Next();
-                x_lav = false;
-                break;
-            case '(':
-                XX_Next();
-                if ((res = X_EvalExpression()))
-                    XEE_RET(res);
-                if (!XX_ParseChar(')'))
-                    XEE_RET(E_ECHAR(')'));
                 SPushLdb(sval, x_pval);
-                XX_Next();
                 x_lav = true;
                 break;
-            default:
-                if (CIsDigD(*x_cur)) {
-                    if ((res = X_ParseNumber()))
-                        XEE_RET(res);
-                    SPushLdb(sval, x_pval);
-                    x_lav = true;
-                } else if(CIsAlpha(*x_cur)) {
-                    //=>X_EvalFunctionCall
-                    if ((res = X_ParseName()))
-                        XEE_RET(res);
-                    MathFunction *fun = FGetFunction(x_pstr);
-                    if (!fun)
-                        XEE_RET(E_UNDEF());
-                    if (XX_ParseChar('(')) {
-                        for (len = 0; len < ARG_MAX; ++len) {
-                            if (!XX_Next())
-                                XEE_RET(E_UTERM());
-                            if (*x_cur == ')')
-                                break;
-                            if ((res = X_EvalExpression()))
-                                XEE_RET(res);
-                            buf[len] = x_pval;
-                            if (!XX_ParseChar(',')) {
-                                ++len;
-                                break;
-                            }
+            }
+        case '*':
+        case '/':
+        case '%':
+        case '^':
+            if (!x_lav)
+                XEE_RET(E_UCHAR());
+            if ((res = XXX_PushOpr(sopr, sval, *x_cur)))
+                XEE_RET(res);
+            XX_Next();
+            x_lav = false;
+            break;
+        case '(':
+            XX_Next();
+            if ((res = X_EvalExpression()))
+                XEE_RET(res);
+            if (!XX_ParseChar(')'))
+                XEE_RET(E_ECHAR(')'));
+            SPushLdb(sval, x_pval);
+            XX_Next();
+            x_lav = true;
+            break;
+        default:
+            if (CIsDigD(*x_cur)) {
+                if ((res = X_ParseNumber()))
+                    XEE_RET(res);
+                SPushLdb(sval, x_pval);
+                x_lav = true;
+            }
+            else if(CIsAlpha(*x_cur)) {
+                //=>X_EvalFunctionCall
+                if ((res = X_ParseName()))
+                    XEE_RET(res);
+                MathFunction *fun = FGetFunction(x_pstr);
+                if (!fun)
+                    XEE_RET(E_UNDEF());
+                if (XX_ParseChar('(')) {
+                    for (len = 0; len < ARG_MAX; ++len) {
+                        if (!XX_Next())
+                            XEE_RET(E_UTERM());
+                        if (*x_cur == ')')
+                            break;
+                        if ((res = X_EvalExpression()))
+                            XEE_RET(res);
+                        buf[len] = x_pval;
+                        if (!XX_ParseChar(',')) {
+                            ++len;
+                            break;
                         }
-                        if (!XX_ParseChar(')'))
-                            E_ECHAR(')');
-                        XX_Next();
-                        x_pval = fun(buf, len);
                     }
-                    else
-                        x_pval = fun(nullptr, 0);
-                    if (errno)
-                        XEE_RET(E_IMPROPER());
-                    if (!isfinite(x_pval))
-                        XEE_RET(E_HMATH());
-                    SPushLdb(sval, x_pval);
-                    x_lav = true;
+                    if (!XX_ParseChar(')'))
+                        E_ECHAR(')');
+                    XX_Next();
+                    x_pval = fun(buf, len);
                 }
                 else
-                    XEE_RET(E_UCHAR());
-                break;
+                    x_pval = fun(nullptr, 0);
+                if (errno)
+                    XEE_RET(E_IMPROPER());
+                if (!isfinite(x_pval))
+                    XEE_RET(E_HMATH());
+                SPushLdb(sval, x_pval);
+                x_lav = true;
+            }
+            else
+                XEE_RET(E_UCHAR());
+            break;
         }
     }
     if ((res = XXX_PushOpr(sopr, sval, 0)))
@@ -223,27 +224,27 @@ int X_ParseInteger() {
         return E_UTERM();
     if (*x_cur == '0') {
         switch (XX_Read()) {
-            case 'b':
-                x_sca = 2;
-                XX_Read();
-                break;
-            case 'x':
-                x_sca = 16;
-                XX_Read();
-                break;
-            case '.':
+        case 'b':
+            x_sca = 2;
+            XX_Read();
+            break;
+        case 'x':
+            x_sca = 16;
+            XX_Read();
+            break;
+        case '.':
+            x_sca = 10;
+            x_pval = 0.0L;
+            return E_SUCCESS;
+        default:
+            if (CIsDigO(*x_cur))
+                x_sca = 8;
+            else {
                 x_sca = 10;
                 x_pval = 0.0L;
                 return E_SUCCESS;
-            default:
-                if (CIsDigO(*x_cur))
-                    x_sca = 8;
-                else {
-                    x_sca = 10;
-                    x_pval = 0.0L;
-                    return E_SUCCESS;
-                }
-                break;
+            }
+            break;
         }
     }
     else
@@ -314,26 +315,26 @@ int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
         long double lhs = SPopLdb(sval);
         long double res = 0.0L;
         switch (SPopInt(sopr)) {
-            case '+':
-                res = lhs + rhs;
-                break;
-            case '-':
-                res = lhs - rhs;
-                break;
-            case '*':
-                res = lhs * rhs;
-                break;
-            case '/':
-                res = lhs / rhs;
-                break;
-            case '%':
-                res = fmodl(lhs, rhs);
-                break;
-            case '^':
-                res = powl(lhs, rhs);
-                break;
-            default:
-                return E_ILLEGAL();
+        case '+':
+            res = lhs + rhs;
+            break;
+        case '-':
+            res = lhs - rhs;
+            break;
+        case '*':
+            res = lhs * rhs;
+            break;
+        case '/':
+            res = lhs / rhs;
+            break;
+        case '%':
+            res = fmodl(lhs, rhs);
+            break;
+        case '^':
+            res = powl(lhs, rhs);
+            break;
+        default:
+            return E_ILLEGAL();
         }
         if (!isfinite(res))
             return E_HMATH();

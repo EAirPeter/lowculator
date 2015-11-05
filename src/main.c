@@ -1,30 +1,44 @@
-#include "common.h"
-#include "error.h"
-#include "functions.h"
+#include "main.h"
+
+#include "control.h"
 #include "parse.h"
 
-#include <stdlib.h>
+#include <unistd.h>
 
-void Cleanup() {
-    ECleanup();
-    FCleanup();
-    PCleanup();
+int Main(int argc, char *argv[]) {
+    if (argc == 1)
+        CFile("--");
+    else {
+        int flg;
+        int count = 0;
+        while ((flg = getopt(argc, argv, ":c:e:f:o:p:x:")) != -1) {
+            ++count;
+            switch (flg) {
+            case 'c':
+                break;
+            case 'e':
+                break;
+            case 'f':
+                break;
+            case 'o':
+                break;
+            case 'p':
+                break;
+            case 'x':
+                break;
+            case '?':
+                break;
+            case ':':
+                break;
+            default:
+                break;
+            }
+        }
+    }
 }
 
-void Startup() {
-    if (atexit(Cleanup))
-        _Exit(-1);
-    if (at_quick_exit(Cleanup))
-        _Exit(-1);
-    EStartup();
-    FStartup();
-    PStartup();
+void MStartup() {
 }
 
-int main(int argc, char *argv[]) {
-    Startup();
-    return 0;
-    UNUSED(argc);
-    UNUSED(argv);
+void MCleanup() {
 }
-

@@ -90,14 +90,14 @@ int ESyntaxIllegal(int lne) {
 
 int EMath(int lne) { 
     switch (errno) {
-        case EDOM:
-            X_MSGSTRINL("domain error occured");
-            break;
-        case ERANGE:
-            X_MSGSTRINL("range error occured");
-            break;
-        default:
-            break;
+    case EDOM:
+        X_MSGSTRINL("domain error occured");
+        break;
+    case ERANGE:
+        X_MSGSTRINL("range error occured");
+        break;
+    default:
+        break;
     }
     return errno;
 }
