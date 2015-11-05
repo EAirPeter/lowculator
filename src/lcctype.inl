@@ -72,14 +72,14 @@ static inline bool CIsWS(int chr) {
     for (int i = 'a'; i <= 'z'; ++i)                    \
         cx_type[i] |= C_NAM | C_ALP | C_LWR;            \
     cx_type['_'] |= C_NAM;                              \
-    int oprs[5] = {'+', '-', '*', '/', '^'};            \
-    for (int i = 0; i < 5; ++i)                         \
-        cx_type[oprs[i]] |= C_STR | C_OPR;              \
-    int strs[4] = {'\0', ',', '(', ')'};                \
-    for (int i = 0; i < 4; ++i)                         \
-        cx_type[strs[i]] |= C_STR;                      \
-    int wsps[3] = {' ', '\t'};                          \
-    for (int i = 0; i < 2; ++i)                         \
-        cx_type[wsps[i]] |= C_WSP;                      \
+    int oprs[] = {'+', '-', '*', '/', '%', '^', -1};    \
+    for (int *p = oprs; *p != -1; ++p)                  \
+        cx_type[*p] |= C_STR | C_OPR;                   \
+    int strs[] = {'\0', ',', '(', ')', -1};             \
+    for (int *p = strs; *p != -1; ++p)                  \
+        cx_type[*p] |= C_STR;                           \
+    int wsps[] = {' ', '\t', -1};                       \
+    for (int *p = wsps; *p != -1; ++p)                  \
+        cx_type[*p] |= C_WSP;                           \
 } while (false)
 

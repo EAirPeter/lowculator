@@ -83,6 +83,7 @@ int X_EvalExpression() {
                 }
             case '*':
             case '/':
+            case '%':
             case '^':
                 if (!x_lav)
                     XEE_RET(E_UCHAR());
@@ -326,6 +327,9 @@ int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
             case '/':
                 res = lhs / rhs;
                 break;
+            case '%':
+                res = fmodl(lhs, rhs);
+                break;
             case '^':
                 res = powl(lhs, rhs);
                 break;
@@ -357,7 +361,7 @@ void PStartup() {
     memset(x_pri, -1, sizeof(x_pri));
     x_pri[0] = 0;
     x_pri['+'] = x_pri['-'] = (1 << 1) + 0;
-    x_pri['*'] = x_pri['/'] = (2 << 1) + 0;
+    x_pri['*'] = x_pri['/'] = x_pri['%'] = (2 << 1) + 0;
     x_pri['^'] = (3 << 1) + 1;
 }
 
