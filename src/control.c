@@ -1,3 +1,5 @@
+#define LOWCULATOR_CONTROL_C_
+
 #include "control.h"
 
 #include "directives.h"
@@ -12,11 +14,49 @@
 
 #define BUF_SIZE    256U
 
+typedef struct X_Element_ X_Element;
+
+struct X_Element_ {
+    FILE       *file;
+    char       *name;
+    X_Element  *next;
+};
+
+X_Element *x_els;
+
+inline void X_DestroyElement(X_Element *ele) {
+    if (ele->name) {
+        free(ele->name);
+        ele->name = nullptr;
+    }
+    ele->next = x_els;
+    x_els = ele;
+}
+
+inline X_Element *X_CreateElement(FILE *file, const char *name) {
+    X_Element *res = x_els;
+    if (res)
+        x_els = res->next;
+    else
+        res = (X_Element *) malloc(sizeof(X_Element));
+    if (!res)
+        return nullptr;
+    res->file = file;
+    res->name = (char *) malloc(strlen(name) + 1);
+    if (!res->name) {
+        X_DestroyElement(res);
+        return nullptr;
+    }
+    strcpy(res->name, name);
+    return res;
+}
+
 char    x_fmt[BUF_SIZE];
 
-FILE   *x_cur;
+X_Element *x_cur;
+
 FILE   *x_out;
-Stack  *x_sfl;
+Stack  *x_sel;
 
 bool    x_pnc;
 
@@ -28,7 +68,7 @@ static inline Result X_FClose(FILE *f) {
 
 Result CNextLine(char *buff, size_t size) {
     Result res = R_SUCCE;
-    while (x_cur && !fgets(buff, (int) size, x_cur))
+    while (x_cur && !fgets(buff, (int) size, x_cur->file))
         if ((res = CEof()))
            return res;
     if (!x_cur)
@@ -38,25 +78,37 @@ Result CNextLine(char *buff, size_t size) {
 
 Result CEof() {
     Result res = R_SUCCE;
-    if ((res = x_cur ? X_FClose(x_cur) : RI_EOFR))
+    if (x_cur) {
+        if ((res = X_FClose(x_cur->file)))
+            return res;
+        X_DestroyElement(x_cur);
+        x_cur = (X_Element *) SPopPtr(x_sel);
+    }
+    else
+        return RI_EOFR;
+    if (x_cur && (res = RContext(x_cur->name)))
         return res;
-    x_cur = (FILE *) SPopPtr(x_sfl);
-    //EContext
     return R_SUCCE;
 }
 
 Result CFile(const char *filename) {
     FILE *f = nullptr;
+    X_Element *e = nullptr;
     if (!strcmp(filename, "--"))
-        f = stdin;
-    else
-        f = fopen(filename, "r");
-    if (!f)
-        return RI_FOPN;
-    if (SPushPtr(x_sfl, x_cur))
+        e = X_CreateElement(stdin, "(stdin)");
+    else {
+        if (!(f = fopen(filename, "r")))
+            return RI_FOPN;
+        e = X_CreateElement(f, filename);
+    }
+    if (!e)
         return R_ITRNL;
-    x_cur = f;
-    //EContext
+    if (SPushPtr(x_sel, x_cur))
+        return R_ITRNL;
+    x_cur = e;
+    Result res = R_SUCCE;
+    if ((res = RContext(x_cur->name)))
+        return res;
     return R_SUCCE;
 }
 
@@ -139,7 +191,8 @@ Result CEvaluate(size_t line, size_t column, const char *expr) {
 }
 
 Result CStartup() {
-    if (!(x_sfl = SCreate()))
+    x_els = nullptr;
+    if (!(x_sel = SCreate()))
         return R_ITRNL;
     x_out = stdout;
     x_pnc = false;
@@ -148,9 +201,14 @@ Result CStartup() {
 }
 
 void CCleanup() {
-    X_FClose(x_cur);
-    FILE *f;
-    while ((f = SPopPtr(x_sfl)))
-        X_FClose(f);
+    while (x_cur)
+        if (CEof())
+            break;
+    X_Element *e = x_cur;
+    while (e) {
+        X_DestroyElement(e);
+        e = (X_Element *) SPopPtr(x_sel);
+    }
+    SDestroy(x_sel);
 }
 

@@ -1,15 +1,11 @@
+#define LOWCULATOR_STACK_C_
+
 #include "stack.h"
 
 #include <stdlib.h>
 
 typedef struct  X_Node_     X_Node;
-typedef union   SElement_   SElement;
-
-union SElement_ {
-    int         int_;
-    long double ldb_;
-    void       *ptr_;
-};
+typedef union   X_Element_  X_Element;
 
 struct Stack_ {
     X_Node     *top;
@@ -17,8 +13,14 @@ struct Stack_ {
     Stack      *nex;
 };
 
+union X_Element_ {
+    int         int_;
+    long double ldb_;
+    void       *ptr_;
+};
+
 struct X_Node_ {
-    SElement    ele;
+    X_Element   ele;
     X_Node     *nex;
 };
 

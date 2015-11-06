@@ -1,3 +1,5 @@
+#define LOWCULATOR_DIRECTIVES_C_
+
 #include "directives.h"
 
 #include "control.h"

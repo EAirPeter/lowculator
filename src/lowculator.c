@@ -1,3 +1,5 @@
+#define LOWCULATOR_LOWCULATOR_C_
+
 #include "common.h"
 
 #include "control.h"

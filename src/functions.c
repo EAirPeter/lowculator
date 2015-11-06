@@ -45,7 +45,14 @@ Result FAddFunction(const char *name, MathFunction *func) {
             if (!strcmp(i->key, name))
                 return R_ITRNL;
     X_Node *p = (X_Node *) malloc(sizeof(X_Node));
-    p->key = strcpy((char *) malloc(strlen(name)), name);
+    if (!p)
+        return R_ITRNL;
+    p->key = (char *) malloc(strlen(name) + 1);
+    if (!p->key) {
+        free(p);
+        return R_ITRNL;
+    }
+    strcpy(p->key, name);
     p->val = func;
     p->nex = x_map[hash];
     x_map[hash] = p;

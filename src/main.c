@@ -1,3 +1,5 @@
+#define LOWCULATOR_MAIN_C_
+
 #include "main.h"
 
 #include "control.h"
