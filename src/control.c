@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+bool c_panic;
+
 #define BUF_SIZE    256U
 
 typedef struct X_Element_ X_Element;
@@ -19,12 +21,13 @@ typedef struct X_Element_ X_Element;
 struct X_Element_ {
     FILE       *file;
     char       *name;
+    size_t      line;
     X_Element  *next;
 };
 
-X_Element *x_els;
+static X_Element *x_els;
 
-inline void X_DestroyElement(X_Element *ele) {
+static inline void X_DestroyElement(X_Element *ele) {
     if (ele->name) {
         free(ele->name);
         ele->name = nullptr;
@@ -33,7 +36,7 @@ inline void X_DestroyElement(X_Element *ele) {
     x_els = ele;
 }
 
-inline X_Element *X_CreateElement(FILE *file, const char *name) {
+static inline X_Element *X_CreateElement(FILE *file, const char *name) {
     X_Element *res = x_els;
     if (res)
         x_els = res->next;
@@ -48,17 +51,16 @@ inline X_Element *X_CreateElement(FILE *file, const char *name) {
         return nullptr;
     }
     strcpy(res->name, name);
+    res->line = 0;
     return res;
 }
 
-char    x_fmt[BUF_SIZE];
+static char         x_fmt[BUF_SIZE];
 
-X_Element *x_cur;
+static X_Element   *x_cur;
 
-FILE   *x_out;
-Stack  *x_sel;
-
-bool    x_pnc;
+static FILE        *x_out;
+static Stack       *x_sel;
 
 static inline Result X_FClose(FILE *f) {
     if (f != stdin && f != stdout)
@@ -66,13 +68,14 @@ static inline Result X_FClose(FILE *f) {
     return R_SUCCE;
 }
 
-Result CNextLine(char *buff, size_t size) {
+Result CNextLine(size_t *line, char *buff, size_t size) {
     Result res = R_SUCCE;
     while (x_cur && !fgets(buff, (int) size, x_cur->file))
         if ((res = CEof()))
            return res;
     if (!x_cur)
         return RI_EOFR;
+    *line = ++x_cur->line;
     return R_SUCCE;
 }
 
@@ -114,24 +117,26 @@ Result CFile(const char *filename) {
 
 Result COutput(const char *filename) {
     Result res = R_SUCCE;
+    FILE *f = nullptr;
+    if (!strcmp(filename, "--"))
+        f = stdout;
+    else
+        f = fopen(filename, "w");
+    if (!f)
+        return RI_FOPN;
     if ((res = X_FClose(x_out)))
         return res;
-    if (!strcmp(filename, "--"))
-        x_out = stdout;
-    else
-        x_out = fopen(filename, "w");
-    if (!x_out)
-        return RI_FOPN;
+    x_out = f;
     return R_SUCCE;
 }
 
 Result CPanic(size_t line, size_t column, const char *val) {
     if (!strcmp(val, "on")) {
-        x_pnc = true;
+        c_panic = true;
         return R_SUCCE;
     }
     if (!strcmp(val, "off")) {
-        x_pnc = false;
+        c_panic = false;
         return R_SUCCE;
     }
     size_t len = strlen(val);
@@ -165,37 +170,34 @@ Result CPrecision(size_t line, size_t column, const char *expr) {
     return R_SUCCE;
 }
 
-Result CDirective(size_t line, size_t column, const char *dire) {
-    Result res = DProcess(line, column, dire);
-    if (res) {
-        if (fputs(RMessage(res), x_out) < 0)
-            return RI_OPOU;
-        if (fputc('\n', x_out) < 0)
-            return RI_OPOU;
-    }
+Result CPrintResultMsg(Result code) {
+    if (fputs(RMessage(code), x_out) < 0)
+        return RI_OPOU;
+    if (fputc('\n', x_out) < 0)
+        return RI_OPOU;
     return R_SUCCE;
+} 
+
+Result CDirective(size_t line, size_t column, const char *dire) {
+    return  DProcess(line, column, dire);
 }
 
 Result CEvaluate(size_t line, size_t column, const char *expr) {
     long double ans;
     Result res = PEval(&ans, line, column, expr);
-    if (res) {
-        if (fputs(RMessage(res), x_out) < 0)
-            return RI_OPOU;
-        if (fputc('\n', x_out) < 0)
-            return RI_OPOU;
-    }
-    else if (fprintf(x_out, x_fmt, res) < 0)
+    if (res)
+        return res;
+    if (fprintf(x_out, x_fmt, ans) < 0)
         return RI_OPOU;
     return R_SUCCE;
 }
 
 Result CStartup() {
+    c_panic = false;
     x_els = nullptr;
     if (!(x_sel = SCreate()))
         return R_ITRNL;
     x_out = stdout;
-    x_pnc = false;
     strcpy(x_fmt, "%.8Lf\n");
     return R_SUCCE;
 }

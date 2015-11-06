@@ -1,5 +1,7 @@
-EXECUTABLE:
-    "lowculator"
+lowculator: A lowb's calculator in C
+-------------------------------------------------------------------------------
+Use COMMANDLINE to start this program.
+-------------------------------------------------------------------------------
 
 COMMANDLINE:
     EXECUTABLE              (EXECUTABLE) (DEFUALT_COMMAND)
@@ -14,6 +16,9 @@ COMMANDS:
 DEFUALT_COMMAND:
     "-f --"                 
 
+EXECUTABLE:
+    "lowculator"
+
 ERROR_MESSAGE:
     SUCCESS:
         "Success."
@@ -24,7 +29,7 @@ ERROR_REASON:
 
 EXPRESSION:
     WS EXPRESSION
-    PARENTHESIZED_EXPRESSION
+    ( EXPRESSION ) WS
     NUMBER
     EXPRESSION OPR EXPRESSION
     INVOCATION
@@ -53,15 +58,14 @@ HEADERS:
     HEXADECIMAL_HEADER:
         "0x"
 
-X_FLOATING:                 (X_INTEGER)(\.(X_DIGITS)+)?(\.?[Ee](INTEGER))?(WS)
-X_INTEGER:                  [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
-PARENTHESIZED_EXPRESSION:   \(((EXPRESSION)\)(WS)
-OPR:                        [\+\-\*\/\%\^](WS)
+X_FLOATING:         (X_INTEGER)(\.(X_DIGITS)+)?(\.?[Ee](INTEGER))?(WS)
+X_INTEGER:          [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
+OPR:                [\+\-\*\/\%\^](WS)
 INVOCATION:
-    FUNCTION:               (FUNCTION_NAME)(WS)\(EXPRESSION(,(EXPRESSION))?\)(WS)
-    CONSTANT:               (CONSTANT_NAME)((WS)\((WS)\))?(WS)
-WS:                         [\t ]*
-X_NAME:                     [A-Za-z][A-Za-z0-9_]*
+    FUNCTION:       (FUNCTION_NAME)(WS)\(EXPRESSION(,(EXPRESSION))?\)(WS)
+    CONSTANT:       (CONSTANT_NAME)((WS)\((WS)\))?(WS)
+WS:                 [\t ]*
+X_NAME:             [A-Za-z][A-Za-z0-9_]*
 
 FUNCTION_NAME:
     math functions.
@@ -72,7 +76,8 @@ CONSTANT_NAME:
 DIRECTIVE:                  #(DIRECTIVES)
 DIRECTIVES:
     DIR_EOF                 eof
-        =>End of file. That means, the current input file will be closed immediately (except stdin).
+        =>End of file. That means, the current input file will be closed
+            immediately (except stdin).
 
     DIR_EVALUATE:           evaluate (EXPRESSION)
         =>Evaluate an expression and print the result.
@@ -81,20 +86,22 @@ DIRECTIVES:
         =>Exit program with the given exitcode (round to integer).
 
     DIR_FILE:               file (FILENAME)
-        =>Process the given file which contains EXPRESSIONs and DIRECTIVEs.
+        =>Process the given fie which contains EXPRESSIONs and DIRECTIVEs.
 
     DIR_PRECISION:          precision (EXPRESSION)
-        =>Specify the precision (round to integer, non-negative and less than 20) of the result to print. (default 8)
+        =>Specify the precision (round to integer, non-negative and less
+            than20) of the result to print. (default 8)
 
     DIR_OUTPUT:             output (FILENAME)
-        =>Close the current output (except stdout), and print following output to the given file. (default stdout)
+        =>Close the current output (except stdout), and print following output
+            to the given file. (default stdout)
 
     DIR_PANIC:              panic (on|off)
-        =>Turn on/off the panic mode. If turned on, any failed operation shall cause ther program exit. (default off)
+        =>Turn on/off the panic mode. If turned on, any failed operation shall
+            cause ther program exit. (default off)
 
 FILENAME:
     "--"                    stdin or stdout.
     a string.               the path to a file.
 
-//SEDFPC
 

@@ -11,19 +11,19 @@
 
 #include "ctype.inl.h"
 
-size_t      x_lne;
-size_t      x_col;
-int         x_sca;
-const char *x_src;
-const char *x_cur;
-bool        x_lav;
+static size_t       x_lne;
+static size_t       x_col;
+static int          x_sca;
+static const char  *x_src;
+static const char  *x_cur;
+static bool         x_lav;
 
 #define BUF_SIZE    256U
 
-long double x_pval;
-char        x_pstr[BUF_SIZE];
+static long double  x_pval;
+static char         x_pstr[BUF_SIZE];
 
-int         x_pri[256];
+static int          x_pri[256];
 
 #define ARG_MAX     4U
 
@@ -32,24 +32,24 @@ int         x_pri[256];
 #define ERR(type_)  R_MAKER(LNE, COL, (type_))
 
 //FWD
-Result  X_EvalExpression();
+static Result   X_EvalExpression();
 
-Result  X_ParseInteger();
-Result  X_ParseName();
-Result  X_ParseNumber();
+static Result   X_ParseInteger();
+static Result   X_ParseName();
+static Result   X_ParseNumber();
 
-inline  bool    XX_ParseChar(int chr);
-inline  int     XX_Peek();
-inline  int     XX_Read();
-inline  int     XX_Next();
+static inline bool      XX_ParseChar(int chr);
+static inline int       XX_Peek();
+static inline int       XX_Read();
+static inline int       XX_Next();
 
-inline  int     XXX_ToDigit(int chr);
-inline  bool    XXX_ShouldPop(int instack, int topush);
-inline  Result  XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
+static inline int       XXX_ToDigit(int chr);
+static inline bool      XXX_ShouldPop(int instack, int topush);
+static inline Result    XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
 
 #define XEE_RET(v_) do {SDestroy(sval); SDestroy(sopr); return v_;} while(false)
 
-Result X_EvalExpression() {
+static Result X_EvalExpression() {
     long double buf[ARG_MAX];
     Result res = R_SUCCE;
     size_t len;
@@ -142,7 +142,7 @@ Result X_EvalExpression() {
             }
             else {
                 r_in0 = *x_cur;
-                XEE_RET(*x_cur ? ERR(RS_UTRM) : ERR(RS_UTRM));
+                XEE_RET(*x_cur ? ERR(RS_UCHR) : ERR(RS_UTRM));
             }
             break;
         }
@@ -155,7 +155,7 @@ Result X_EvalExpression() {
     XEE_RET(R_SUCCE);
 }
 
-Result X_ParseName() {
+static Result X_ParseName() {
     if (!CIsAlpha(*x_cur)) {
         r_in0 = *x_cur;
         return *x_cur ? ERR(RS_ENAM) : ERR(RS_UTRM);
@@ -170,7 +170,7 @@ Result X_ParseName() {
     return R_SUCCE;
 }
 
-Result X_ParseNumber() {
+static Result X_ParseNumber() {
     Result res = R_SUCCE;
     if ((res = X_ParseInteger()))
         return res;
@@ -220,7 +220,7 @@ Result X_ParseNumber() {
     return R_SUCCE;
 }
 
-Result X_ParseInteger() {
+static Result X_ParseInteger() {
     bool neg = *x_cur == '-';
     if (neg || *x_cur == '+')
         XX_Read();
@@ -272,17 +272,17 @@ Result X_ParseInteger() {
     return R_SUCCE;
 }
 
-bool XX_ParseChar(int chr) {
+static bool XX_ParseChar(int chr) {
     if (CIsWS(*x_cur))
         XX_Next();
     return *x_cur == chr;
 }
 
-int XX_Read() {
+static int XX_Read() {
     return *x_cur ? *(++x_cur) : 0;
 }
 
-int XX_Next() {
+static int XX_Next() {
     if (*x_cur) {
         while (*(++x_cur) && CIsWS(*x_cur));
         return *x_cur;
@@ -290,11 +290,11 @@ int XX_Next() {
     return 0;
 }
 
-int XX_Peek() {
+static int XX_Peek() {
     return *x_cur ? *(x_cur + 1) : 0;
 }
 
-int XXX_ToDigit(int chr) {
+static int XXX_ToDigit(int chr) {
     if (CIsDigD(chr))
         chr &= 0x0f;
     else if (CIsAUpr(chr))
@@ -308,12 +308,12 @@ int XXX_ToDigit(int chr) {
     return -1;
 }
 
-bool XXX_ShouldPop(int instack, int topush) {
+static bool XXX_ShouldPop(int instack, int topush) {
     //return x_pri[topush] & 1 ? x_pri[instack] > x_pri[topush] : x_pri[instack] >= x_pri[topush];
     return x_pri[instack] >= x_pri[topush];
 }
 
-Result XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
+static Result XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
     Result res = R_SUCCE;
     while (!SEmpty(sopr) && XXX_ShouldPop(STopInt(sopr), opr)) {
         if (SSize(sval) < 2)

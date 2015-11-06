@@ -52,6 +52,7 @@ extern  char        r_str[R_BUFFSIZE];
 #define RS_IMPR XR_SSUB(0x8U)
 #define RS_ILLE XR_SSUB(0x9U)
 #define RS_ILLD XR_SSUB(0xAU)
+#define RS_ILLA XR_SSUB(0xBU)
 
 #define RM_RESV XR_MSUB(0x0U)
 #define RM_DOMN XR_MSUB(0x1U)

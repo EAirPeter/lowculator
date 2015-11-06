@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-size_t      x_lne;
-size_t      x_col;
-const char *x_src;
-const char *x_cur;
+static size_t       x_lne;
+static size_t       x_col;
+static const char  *x_src;
+static const char  *x_cur;
 
 #define LNE             (x_lne)
 #define COL             (x_col + (size_t) (x_cur - x_src))
@@ -32,10 +32,10 @@ const char *x_cur;
         return DIRFUN(dir_)();                              \
     } while (false)         
 
-#define DEFDIR(dir_, ...)               \
-    const char *DIRSTR(dir_) = #dir_;   \
-    size_t      DIRLEN(dir_);           \
-    __VA_ARGS__ Result DIRFUN(dir_)()
+#define DEFDIR(dir_, ...)                   \
+    const char *DIRSTR(dir_) = #dir_;       \
+    size_t      DIRLEN(dir_);               \
+    __VA_ARGS__ static Result DIRFUN(dir_)()
 
 DEFDIR(eof) {
     return CEof();

@@ -12,7 +12,7 @@
 
 #include <stdlib.h>
 
-void Cleanup() {
+static void Cleanup() {
     MCleanup();
     CCleanup();
     PCleanup();
@@ -24,7 +24,7 @@ void Cleanup() {
 
 #define SUP(mod_) if ((res = CONCAT(mod_, Startup)())) return res
 
-Result Startup() {
+static Result Startup() {
     Result res = R_SUCCE;
     SUP(R);
     SUP(S);
