@@ -1,3 +1,5 @@
+#define LOWCULATOR_FUNCTIONS_C_
+
 #include "functions.h"
 
 #include <stdint.h>
@@ -34,25 +36,26 @@ MathFunction *FGetFunction(const char *name) {
     return cur ? cur->val : nullptr;
 }
 
-bool FAddFunction(const char *name, MathFunction *func) {
+Result FAddFunction(const char *name, MathFunction *func) {
     if (!name || !func)
-        return false;
+        return R_ITRNL;
     uint32_t hash = X_Hash(name);
     if (x_map[hash])
         for (X_Node *i = x_map[hash]; i; i = i->nex)
             if (!strcmp(i->key, name))
-                return false;
+                return R_ITRNL;
     X_Node *p = (X_Node *) malloc(sizeof(X_Node));
     p->key = strcpy((char *) malloc(strlen(name)), name);
     p->val = func;
     p->nex = x_map[hash];
     x_map[hash] = p;
-    return true;
+    return R_SUCCE;
 }
 
-void FStartup() {
+Result FStartup() {
     memset(x_map, 0, sizeof(x_map));
     ADD_MATH;
+    return R_SUCCE;
 }
 
 void FCleanup() {

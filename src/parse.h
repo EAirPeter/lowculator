@@ -2,12 +2,13 @@
 #define LOWCULATOR_PARSE_H_
 
 #include "common.h"
+#include "result.h"
 
-void        PStartup();
+Result      PStartup();
 
 void        PCleanup();
 
-long double PEval(int line, int column, const char *expr);
+Result      PEval(long double *ans, size_t line, size_t column, const char *expr);
 
 #endif
 

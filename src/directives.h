@@ -2,12 +2,13 @@
 #define LOWCULATOR_DIRECTIVES_H_
 
 #include "common.h"
+#include "result.h"
 
-void DStartup();
+Result  DStartup();
 
-void DCleanup();
+void    DCleanup();
 
-int  DProcess(int line, int column, const char *dire);
+Result  DProcess(size_t line, size_t column, const char *dire);
 
 #endif
 

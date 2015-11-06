@@ -12,14 +12,14 @@ union SElement_ {
 };
 
 struct Stack_ {
-    X_Node             *top;
-    size_t              siz;
-    Stack              *nex;
+    X_Node     *top;
+    size_t      siz;
+    Stack      *nex;
 };
 
 struct X_Node_ {
-    SElement            ele;
-    X_Node             *nex;
+    SElement    ele;
+    X_Node     *nex;
 };
 
 Stack   *x_stks;
@@ -31,6 +31,8 @@ static inline X_Node *X_CreateNode(X_Node *nex) {
         x_nods = res->nex;
     else
         res = (X_Node *) malloc(sizeof(X_Node));
+    if (!res)
+        return nullptr;
     res->nex = nex;
     return res;
 }
@@ -48,6 +50,8 @@ Stack *SCreate() {
         x_stks = res->nex;
     else
         res = (Stack *) malloc(sizeof(Stack));
+    if (!res)
+        return nullptr;
     res->top = nullptr;
     res->siz = 0;
     res->nex = nullptr;
@@ -64,22 +68,31 @@ void SDestroy(Stack *stk) {
     x_stks = stk;
 }
 
-void SPushInt(Stack *stk, int int_) {
+Result SPushInt(Stack *stk, int int_) {
     stk->top = X_CreateNode(stk->top);
+    if (!stk->top)
+        return R_ITRNL;
     stk->top->ele.int_ = int_;
     ++stk->siz;
+    return R_SUCCE;
 }
 
-void SPushLdb(Stack *stk, long double ldb_) {
+Result SPushLdb(Stack *stk, long double ldb_) {
     stk->top = X_CreateNode(stk->top);
+    if (!stk->top)
+        return R_ITRNL;
     stk->top->ele.ldb_ = ldb_;
     ++stk->siz;
+    return R_SUCCE;
 }
 
-void SPushPtr(Stack *stk, void *ptr_) {
+Result SPushPtr(Stack *stk, void *ptr_) {
     stk->top = X_CreateNode(stk->top);
+    if (!stk->top)
+        return R_ITRNL;
     stk->top->ele.ptr_ = ptr_;
     ++stk->siz;
+    return R_SUCCE;
 }
 
 int SPopInt(Stack *stk) {
@@ -129,9 +142,10 @@ size_t SSize(Stack *stk) {
     return stk->siz;
 }
 
-void SStartup() {
+Result SStartup() {
     x_stks = nullptr;
     x_nods = nullptr;
+    return R_SUCCE;
 }
 
 void SCleanup() {

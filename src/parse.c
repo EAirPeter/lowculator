@@ -1,6 +1,7 @@
+#define LOWCULATOR_PARSE_C_
+
 #include "parse.h"
 
-#include "error.h"
 #include "functions.h"
 #include "stack.h"
 
@@ -10,8 +11,8 @@
 
 #include "ctype.inl.h"
 
-int         x_lne;
-int         x_col;
+size_t      x_lne;
+size_t      x_col;
 int         x_sca;
 const char *x_src;
 const char *x_cur;
@@ -27,35 +28,15 @@ int         x_pri[256];
 #define ARG_MAX     4U
 
 #define LNE         (x_lne)
-#define COL         (x_col + (int)(x_cur - x_src))
-
-#define E_ECHAR(c_) \
-    ESyntaxExpectChar       (LNE, COL, *x_cur,  c_)
-#define E_ENAME()   \
-    ESyntaxExpectName       (LNE, COL, *x_cur)
-#define E_ENUMBER() \
-    ESyntaxExpectNumber     (LNE, COL, *x_cur)
-#define E_UCHAR()   \
-    ESyntaxUnexpectedChar   (LNE, COL, *x_cur)
-#define E_UTERM()   \
-    ESyntaxUnexpectedTerm   (LNE, COL)
-#define E_ULEN()    \
-    ESyntaxUnexpectedLength (LNE, COL)
-#define E_UNDEF()   \
-    ESyntaxUndefined        (LNE, COL, x_pstr)
-#define E_IMPROPER()\
-    ESyntaxImproper         (LNE, COL)
-#define E_ILLEGAL() \
-    ESyntaxIllegal          (LNE)
-#define E_HMATH()   \
-    EMath                   (LNE)
+#define COL         (x_col + (size_t)(x_cur - x_src))
+#define ERR(type_)  R_MAKER(LNE, COL, (type_))
 
 //FWD
-int     X_EvalExpression();
+Result  X_EvalExpression();
 
-int     X_ParseInteger();
-int     X_ParseName();
-int     X_ParseNumber();
+Result  X_ParseInteger();
+Result  X_ParseName();
+Result  X_ParseNumber();
 
 inline  bool    XX_ParseChar(int chr);
 inline  int     XX_Peek();
@@ -64,13 +45,13 @@ inline  int     XX_Next();
 
 inline  int     XXX_ToDigit(int chr);
 inline  bool    XXX_ShouldPop(int instack, int topush);
-inline  int     XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
+inline  Result  XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
 
 #define XEE_RET(v_) do {SDestroy(sval); SDestroy(sopr); return v_;} while(false)
 
-int X_EvalExpression() {
+Result X_EvalExpression() {
     long double buf[ARG_MAX];
-    int res = E_SUCCESS;
+    Result res = R_SUCCE;
     size_t len;
     Stack *sval = SCreate();
     Stack *sopr = SCreate();
@@ -89,8 +70,10 @@ int X_EvalExpression() {
         case '/':
         case '%':
         case '^':
-            if (!x_lav)
-                XEE_RET(E_UCHAR());
+            if (!x_lav) {
+                r_in0 = *x_cur;
+                XEE_RET(ERR(RS_UCHR));
+            }
             if ((res = XXX_PushOpr(sopr, sval, *x_cur)))
                 XEE_RET(res);
             XX_Next();
@@ -100,9 +83,13 @@ int X_EvalExpression() {
             XX_Next();
             if ((res = X_EvalExpression()))
                 XEE_RET(res);
-            if (!XX_ParseChar(')'))
-                XEE_RET(E_ECHAR(')'));
-            SPushLdb(sval, x_pval);
+            if (!XX_ParseChar(')')) {
+                r_in0 = *x_cur;
+                r_in1 = ')';
+                XEE_RET(*x_cur ? ERR(RS_ECHR) : ERR(RS_UTRM));
+            }
+            if (SPushLdb(sval, x_pval))
+                XEE_RET(R_ITRNL);
             XX_Next();
             x_lav = true;
             break;
@@ -110,7 +97,8 @@ int X_EvalExpression() {
             if (CIsDigD(*x_cur)) {
                 if ((res = X_ParseNumber()))
                     XEE_RET(res);
-                SPushLdb(sval, x_pval);
+                if (SPushLdb(sval, x_pval))
+                    XEE_RET(R_ITRNL);
                 x_lav = true;
             }
             else if(CIsAlpha(*x_cur)) {
@@ -118,12 +106,14 @@ int X_EvalExpression() {
                 if ((res = X_ParseName()))
                     XEE_RET(res);
                 MathFunction *fun = FGetFunction(x_pstr);
-                if (!fun)
-                    XEE_RET(E_UNDEF());
+                if (!fun) {
+                    strcpy(r_str, x_pstr);
+                    XEE_RET(ERR(RS_NDEF));
+                }
                 if (XX_ParseChar('(')) {
                     for (len = 0; len < ARG_MAX; ++len) {
                         if (!XX_Next())
-                            XEE_RET(E_UTERM());
+                            XEE_RET(ERR(RS_UTRM));
                         if (*x_cur == ')')
                             break;
                         if ((res = X_EvalExpression()))
@@ -134,48 +124,54 @@ int X_EvalExpression() {
                             break;
                         }
                     }
-                    if (!XX_ParseChar(')'))
-                        E_ECHAR(')');
+                    if (!XX_ParseChar(')')) {
+                        r_in0 = *x_cur;
+                        r_in1 = ')';
+                        XEE_RET(*x_cur ? ERR(RS_ECHR) : ERR(RS_UTRM));
+                    }
                     XX_Next();
-                    x_pval = fun(buf, len);
+                    if ((res = fun(&x_pval, buf, len)))
+                        XEE_RET(ERR(res));
                 }
                 else
-                    x_pval = fun(nullptr, 0);
-                if (errno)
-                    XEE_RET(E_IMPROPER());
-                if (!isfinite(x_pval))
-                    XEE_RET(E_HMATH());
-                SPushLdb(sval, x_pval);
+                    if ((res = fun(&x_pval, nullptr, 0)))
+                        XEE_RET(ERR(res));
+                if (SPushLdb(sval, x_pval))
+                    XEE_RET(R_ITRNL);
                 x_lav = true;
             }
-            else
-                XEE_RET(E_UCHAR());
+            else {
+                r_in0 = *x_cur;
+                XEE_RET(*x_cur ? ERR(RS_UTRM) : ERR(RS_UTRM));
+            }
             break;
         }
     }
     if ((res = XXX_PushOpr(sopr, sval, 0)))
         XEE_RET(res);
     if (!x_lav || SSize(sopr) != 1 || SSize(sval) != 1)
-        XEE_RET(E_ILLEGAL());
+        XEE_RET(ERR(RS_ILLE));
     x_pval = STopLdb(sval);
-    XEE_RET(E_SUCCESS);
+    XEE_RET(R_SUCCE);
 }
 
-int X_ParseName() {
-    if (!CIsAlpha(*x_cur))
-        return E_ENAME();
+Result X_ParseName() {
+    if (!CIsAlpha(*x_cur)) {
+        r_in0 = *x_cur;
+        return *x_cur ? ERR(RS_ENAM) : ERR(RS_UTRM);
+    }
     const char *from = x_cur;
     while (CIsName(XX_Read()));
     ptrdiff_t len = x_cur - from;
     if (len > BUF_SIZE)
-        return E_ULEN();
+        return ERR(RS_ULEN);
     strncpy(x_pstr, from, (size_t) len);
     x_pstr[len] = '\0';
-    return E_SUCCESS;
+    return R_SUCCE;
 }
 
-int X_ParseNumber() {
-    int res = E_SUCCESS;
+Result X_ParseNumber() {
+    Result res = R_SUCCE;
     if ((res = X_ParseInteger()))
         return res;
     long double val = x_pval;
@@ -183,8 +179,10 @@ int X_ParseNumber() {
     if (*x_cur == '.') {
         int dig;
         long double coe = 1.0L / x_sca;
-        if ((dig = XXX_ToDigit(XX_Read())) == -1)
-            return E_ENUMBER();
+        if ((dig = XXX_ToDigit(XX_Read())) == -1) {
+            r_in0 = *x_cur;
+            return *x_cur ? ERR(RS_ENUM) : ERR(RS_UTRM);
+        }
         if (val < 0)
             while (dig != -1) {
                 val -= coe * dig;
@@ -198,30 +196,36 @@ int X_ParseNumber() {
                 dig = XXX_ToDigit(XX_Read());
             }
     }
-    if (*x_cur == '.' && XX_Read() != 'E' && *x_cur != 'e')
-        return E_ENUMBER();
+    if (*x_cur == '.' && XX_Read() != 'E' && *x_cur != 'e') {
+        r_in0 = *x_cur;
+        return ERR(RS_ENUM);
+    }
     if (*x_cur == 'E' || *x_cur == 'e') {
         XX_Read();
         if ((res = X_ParseInteger()))
             return res;
         val *= powl(sca, x_pval);
     }
-    if (CIsName(*x_cur))
-        return E_UCHAR();
+    if (CIsName(*x_cur)) {
+        r_in0 = *x_cur;
+        return ERR(RS_UCHR);
+    }
     if (CIsWS(*x_cur))
         XX_Next();
-    if (!CIsStructural(*x_cur))
-        return E_UCHAR();
+    if (!CIsStructural(*x_cur)) {
+        r_in0 = *x_cur;
+        return *x_cur ? ERR(RS_UTRM) : ERR(RS_UCHR);
+    }
     x_pval = val;
-    return E_SUCCESS;
+    return R_SUCCE;
 }
 
-int X_ParseInteger() {
+Result X_ParseInteger() {
     bool neg = *x_cur == '-';
     if (neg || *x_cur == '+')
         XX_Read();
     if (!*x_cur)
-        return E_UTERM();
+        return ERR(RS_UTRM);
     if (*x_cur == '0') {
         switch (XX_Read()) {
         case 'b':
@@ -235,14 +239,14 @@ int X_ParseInteger() {
         case '.':
             x_sca = 10;
             x_pval = 0.0L;
-            return E_SUCCESS;
+            return R_SUCCE;
         default:
             if (CIsDigO(*x_cur))
                 x_sca = 8;
             else {
                 x_sca = 10;
                 x_pval = 0.0L;
-                return E_SUCCESS;
+                return R_SUCCE;
             }
             break;
         }
@@ -252,18 +256,20 @@ int X_ParseInteger() {
     if (*x_cur == '0') {
         XX_Read();
         x_pval = 0.0L;
-        return E_SUCCESS;
+        return R_SUCCE;
     }
     int dig = 0;
     long double val = 0.0L;
-    if ((dig = XXX_ToDigit(*x_cur)) == -1)
-        return E_ENUMBER();
+    if ((dig = XXX_ToDigit(*x_cur)) == -1) {
+        r_in0 = *x_cur;
+        return *x_cur ? ERR(RS_UCHR) : ERR(RS_UTRM);
+    }
     while (dig != -1) {
         val = val * x_sca + dig;
         dig = XXX_ToDigit(XX_Read());
     }
     x_pval = neg ? -val : val;
-    return E_SUCCESS;
+    return R_SUCCE;
 }
 
 bool XX_ParseChar(int chr) {
@@ -307,44 +313,47 @@ bool XXX_ShouldPop(int instack, int topush) {
     return x_pri[instack] >= x_pri[topush];
 }
 
-int XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
+Result XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
+    Result res = R_SUCCE;
     while (!SEmpty(sopr) && XXX_ShouldPop(STopInt(sopr), opr)) {
         if (SSize(sval) < 2)
-            return E_ILLEGAL();
+            return RS_ILLE;
         long double rhs = SPopLdb(sval);
         long double lhs = SPopLdb(sval);
-        long double res = 0.0L;
+        long double ans = 0.0L;
         switch (SPopInt(sopr)) {
         case '+':
-            res = lhs + rhs;
+            ans = lhs + rhs;
             break;
         case '-':
-            res = lhs - rhs;
+            ans = lhs - rhs;
             break;
         case '*':
-            res = lhs * rhs;
+            ans = lhs * rhs;
             break;
         case '/':
-            res = lhs / rhs;
+            ans = lhs / rhs;
             break;
         case '%':
-            res = fmodl(lhs, rhs);
+            ans = fmodl(lhs, rhs);
             break;
         case '^':
-            res = powl(lhs, rhs);
+            ans = powl(lhs, rhs);
             break;
         default:
-            return E_ILLEGAL();
+            return R_ITRNL;
         }
-        if (!isfinite(res))
-            return E_HMATH();
-        SPushLdb(sval, res);
+        if ((res = RMathType(ans)))
+            return ERR(res);
+        if (SPushLdb(sval, ans))
+            return R_ITRNL;
     }
-    SPushInt(sopr, opr);
-    return E_SUCCESS;
+    if (SPushInt(sopr, opr))
+        return R_ITRNL;
+    return R_SUCCE;
 }
 
-long double PEval(int line, int column, const char *expr) {
+Result PEval(long double *ans, size_t line, size_t column, const char *expr) {
     x_lne = line;
     x_col = column;
     x_src = expr;
@@ -352,18 +361,19 @@ long double PEval(int line, int column, const char *expr) {
     x_lav = false;
     if (CIsWS(*x_cur))
         XX_Next();
-    if (!X_EvalExpression())
-        ESuccess();
-    return x_pval;
+    Result res = X_EvalExpression();
+    *ans = x_pval;
+    return res;
 }
 
-void PStartup() {
+Result PStartup() {
     INIT_CTYPE;
     memset(x_pri, -1, sizeof(x_pri));
     x_pri[0] = 0;
     x_pri['+'] = x_pri['-'] = (1 << 1) + 0;
     x_pri['*'] = x_pri['/'] = x_pri['%'] = (2 << 1) + 0;
     x_pri['^'] = (3 << 1) + 1;
+    return R_SUCCE;
 }
 
 void PCleanup() {

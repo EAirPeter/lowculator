@@ -20,122 +20,131 @@ Stack  *x_sfl;
 
 bool    x_pnc;
 
-static inline void X_FClose(FILE *f) {
+static inline Result X_FClose(FILE *f) {
     if (f != stdin && f != stdout)
-        errno = fclose(f);
+        return fclose(f) ? RI_FCLS : R_SUCCE;
+    return R_SUCCE;
 }
 
-int CNextLine(char *buff, size_t size) {
+Result CNextLine(char *buff, size_t size) {
+    Result res = R_SUCCE;
     while (x_cur && !fgets(buff, (int) size, x_cur))
-        if (!CEof())
-            exit(errno);
+        if ((res = CEof()))
+           return res;
     if (!x_cur)
-        return EOF;
-    return E_SUCCESS;
+        return RI_EOFR;
+    return R_SUCCE;
 }
 
-int CEof() {
-    if (x_cur)
-        X_FClose(x_cur);
-    else
-        exit(errno);
-    if (errno)
-        exit(errno);
+Result CEof() {
+    Result res = R_SUCCE;
+    if ((res = x_cur ? X_FClose(x_cur) : RI_EOFR))
+        return res;
     x_cur = (FILE *) SPopPtr(x_sfl);
     //EContext
-    return E_SUCCESS;
+    return R_SUCCE;
 }
 
-int CFile(const char *filename) {
+Result CFile(const char *filename) {
     FILE *f = nullptr;
     if (!strcmp(filename, "--"))
         f = stdin;
     else
         f = fopen(filename, "r");
     if (!f)
-        exit(errno);
-    SPushPtr(x_sfl, x_cur);
+        return RI_FOPN;
+    if (SPushPtr(x_sfl, x_cur))
+        return R_ITRNL;
     x_cur = f;
     //EContext
-    return E_SUCCESS;
+    return R_SUCCE;
 }
 
-int COutput(const char *filename) {
-    X_FClose(x_out);
-    if (errno)
-        exit(errno);
+Result COutput(const char *filename) {
+    Result res = R_SUCCE;
+    if ((res = X_FClose(x_out)))
+        return res;
     if (!strcmp(filename, "--"))
         x_out = stdout;
     else
         x_out = fopen(filename, "w");
     if (!x_out)
-        exit(errno);
-    return E_SUCCESS;
+        return RI_FOPN;
+    return R_SUCCE;
 }
 
-int CPanic(int line, int column, const char *val) {
+Result CPanic(size_t line, size_t column, const char *val) {
     if (!strcmp(val, "on")) {
         x_pnc = true;
-        return E_SUCCESS;
+        return R_SUCCE;
     }
     if (!strcmp(val, "off")) {
         x_pnc = false;
-        return E_SUCCESS;
+        return R_SUCCE;
     }
-    return ESyntaxUndefined(line, column + (int) strlen(val), val);
+    size_t len = strlen(val);
+    if (len >= R_BUFFSIZE)
+        return R_MAKER(line, column + len, RS_ULEN);
+    strcpy(r_str, val);
+    return R_MAKER(line, column + len, RS_NDEF);
 }
 
-_Noreturn int CExit(int line, int column, const char *expr) {
-    exit((int) lroundl(PEval(line, column, expr)));
+_Noreturn Result CExit(size_t line, size_t column, const char *expr) {
+    long double ans;
+    if (PEval(&ans, line, column, expr))
+        CTerminate(0);
+    CTerminate((int) lroundl(ans));
 }
 
-int CPrecision(int line, int column, const char *expr) {
-    int prec = (int) lroundl(PEval(line, column, expr));
-    if (errno)
-        return errno;
+_Noreturn Result CTerminate(int exitcode) {
+    exit(exitcode);
+}
+
+Result CPrecision(size_t line, size_t column, const char *expr) {
+    long double ans;
+    Result res = R_SUCCE;
+    if ((res = PEval(&ans, line, column, expr)))
+        return res;
+    int prec = (int) lroundl(ans);
     if (prec >= 0 && prec < 20)
         sprintf(x_fmt, "%%.%dLf\n", prec);
-    else {
-        errno = EDOM;
-        return EMath(line);
-    }
-    return E_SUCCESS;
+    else
+        return RS_ILLD;
+    return R_SUCCE;
 }
 
-int CDirective(int line, int column, const char *dire) {
-    int err = DProcess(line, column, dire);
-    if (err) {
-        if (fputs(EMessage(), x_out) < 0)
-            exit(E_IO);
+Result CDirective(size_t line, size_t column, const char *dire) {
+    Result res = DProcess(line, column, dire);
+    if (res) {
+        if (fputs(RMessage(res), x_out) < 0)
+            return RI_OPOU;
         if (fputc('\n', x_out) < 0)
-            exit(E_IO);
-        if (x_pnc)
-            exit(err);
+            return RI_OPOU;
     }
-    return E_SUCCESS;
+    return R_SUCCE;
 }
 
-int CEvaluate(int line, int column, const char *expr) {
-    long double res = PEval(line, column, expr);
-    int err = errno;
-    if (err) {
-        if (fputs(EMessage(), x_out) < 0)
-            exit(E_IO);
+Result CEvaluate(size_t line, size_t column, const char *expr) {
+    long double ans;
+    Result res = PEval(&ans, line, column, expr);
+    if (res) {
+        if (fputs(RMessage(res), x_out) < 0)
+            return RI_OPOU;
         if (fputc('\n', x_out) < 0)
-            exit(E_IO);
-        if (x_pnc)
-            exit(err);
+            return RI_OPOU;
     }
     else if (fprintf(x_out, x_fmt, res) < 0)
-        exit(E_IO);
-    return E_SUCCESS;
+        return RI_OPOU;
+    return R_SUCCE;
 }
 
-void CStartup() {
-    x_sfl = SCreate();
+Result CStartup() {
+    if (!(x_sfl = SCreate()))
+        return R_ITRNL;
     x_out = stdout;
     x_pnc = false;
     strcpy(x_fmt, "%.8Lf\n");
+    return R_SUCCE;
 }
 
 void CCleanup() {

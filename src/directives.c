@@ -8,15 +8,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-int         x_lne;
-int         x_col;
+size_t      x_lne;
+size_t      x_col;
 const char *x_src;
 const char *x_cur;
 
 #define LNE             (x_lne)
-#define COL             (x_col + (int) (x_cur - x_src))
+#define COL             (x_col + (size_t) (x_cur - x_src))
 
-#define E_DIR()         ESyntaxDirective(LNE, COL)
+#define E_DIR()         R_MAKER(LNE, COL, RS_ILLD)
 
 #define DIRSTR(dir_)    CONCAT(x_DIR, dir_)
 #define DIRLEN(dir_)    CONCAT(x_LEN, dir_)
@@ -33,7 +33,7 @@ const char *x_cur;
 #define DEFDIR(dir_, ...)               \
     const char *DIRSTR(dir_) = #dir_;   \
     size_t      DIRLEN(dir_);           \
-    __VA_ARGS__ int DIRFUN(dir_)()
+    __VA_ARGS__ Result DIRFUN(dir_)()
 
 DEFDIR(eof) {
     return CEof();
@@ -75,7 +75,7 @@ DEFDIR(precision) {
     return CPrecision(LNE, COL, x_cur);
 }
 
-int DProcess(int line, int column, const char *dire) {
+Result DProcess(size_t line, size_t column, const char *dire) {
     x_lne = line;
     x_col = column;
     x_src = dire;
@@ -93,7 +93,7 @@ int DProcess(int line, int column, const char *dire) {
     return E_DIR();
 }
 
-void DStartup() {
+Result DStartup() {
     INITDIR(eof);
     INITDIR(evaluate);
     INITDIR(exit);
@@ -101,6 +101,7 @@ void DStartup() {
     INITDIR(output);
     INITDIR(panic);
     INITDIR(precision);
+    return R_SUCCE;
 }
 
 void DCleanup() {

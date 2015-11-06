@@ -1,4 +1,6 @@
-#include "error.h"
+#ifndef LOWCULATOR_FUNCTIONS_C_
+#   error "improper use of this file"
+#endif
 
 #include <math.h>
 #include <tgmath.h>
@@ -10,18 +12,17 @@
 
 #define FUNNAME(name_)      CONCAT(X_WRAPPED, name_)
 
-#define DEFFUN(name_, mapped_, pars_)                                   \
-    long double FUNNAME(name_)(long double *argv, size_t argc) {        \
-        if (argc != (pars_)) {                                          \
-            errno = E_SYNTAX;                                           \
-            return 0.0L;                                                \
-        }                                                               \
-        errno = E_SUCCESS;                                              \
-        return mapped_(CONCAT(PARS_, pars_));                           \
-        UNUSED(argv);                                                   \
+#define DEFFUN(name_, mapped_, pars_) Result                            \
+    FUNNAME(name_)(long double *ans, long double *argv, size_t argc) {  \
+        if (argc != (pars_))                                            \
+            return RS_IMPR;                                             \
+        *ans = mapped_(CONCAT(PARS_, pars_));                           \
+        return RMathType(*ans);                                         \
     }
 
-#define ADDFUN(name_)       FAddFunction(#name_, FUNNAME(name_))
+#define ADDFUN(name_)                           \
+    if (FAddFunction(#name_, FUNNAME(name_)))   \
+        return R_ITRNL
 
 DEFFUN(abs      , fabsl     , 1)
 DEFFUN(mod      , fmodl     , 2)
@@ -109,20 +110,19 @@ DEFFUN(round    , roundl    , 1)
 #define COFNAME(name_)  CONCAT(X_CONST, name_)
 
 #define DEFCON(name_)                                                   \
-    long double COVNAME(name_);                                         \
-    long double COFNAME(name_)(long double *argv, size_t argc) {        \
-        if (argc) {                                                     \
-            errno = E_SYNTAX;                                           \
-            return 0.0L;                                                \
-        }                                                               \
-        errno = E_SUCCESS;                                              \
-        return COVNAME(name_);                                          \
+    long double COVNAME(name_); Result                                  \
+    COFNAME(name_)(long double *ans, long double *argv, size_t argc) {  \
+        if (argc)                                                       \
+            return RS_IMPR;                                             \
+        *ans = COVNAME(name_);                                          \
+        return R_SUCCE;                                                 \
         UNUSED(argv);                                                   \
     }
 
-#define ADDCON(name_, expr_) do {           \
-    COVNAME(name_) = (expr_);               \
-    FAddFunction(#name_, COFNAME(name_));   \
+#define ADDCON(name_, expr_) do {               \
+    COVNAME(name_) = (expr_);                   \
+    if (FAddFunction(#name_, COFNAME(name_)))   \
+        return R_ITRNL;                         \
 } while (false)
 
 DEFCON(pi)

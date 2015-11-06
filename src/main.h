@@ -1,11 +1,14 @@
 #ifndef LOWCULATOR_MAIN_H_
 #define LOWCULATOR_MAIN_H_
 
-void MStartup();
+#include "common.h"
+#include "result.h"
 
-void MCleanup();
+Result  MStartup();
 
-int Main(int argc, char *argv[]);
+void    MCleanup();
+
+Result  Main(int argc, char *argv[]);
 
 #endif
 

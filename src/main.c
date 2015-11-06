@@ -5,7 +5,7 @@
 
 #include <unistd.h>
 
-int Main(int argc, char *argv[]) {
+Result Main(int argc, char *argv[]) {
     if (argc == 1)
         CFile("--");
     else {
@@ -35,9 +35,11 @@ int Main(int argc, char *argv[]) {
             }
         }
     }
+    return R_SUCCE;
 }
 
-void MStartup() {
+Result MStartup() {
+    return R_SUCCE;
 }
 
 void MCleanup() {

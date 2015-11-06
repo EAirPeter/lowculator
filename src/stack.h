@@ -2,10 +2,11 @@
 #define LOWCULATOR_STACK_H_
 
 #include "common.h"
+#include "result.h"
 
 typedef struct Stack_ Stack;
 
-void        SStartup();
+Result      SStartup();
 
 void        SCleanup();
 
@@ -13,11 +14,11 @@ Stack      *SCreate();
 
 void        SDestroy(Stack *stk);
 
-void        SPushInt(Stack *stk, int         int_);
+Result      SPushInt(Stack *stk, int         int_);
 
-void        SPushLdb(Stack *stk, long double ldb_);
+Result      SPushLdb(Stack *stk, long double ldb_);
 
-void        SPushPtr(Stack *stk, void       *ptr_);
+Result      SPushPtr(Stack *stk, void       *ptr_);
 
 int         SPopInt(Stack *stk);
 

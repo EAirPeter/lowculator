@@ -2,16 +2,18 @@
 #define LOWCULATOR_FUNCTIONS_H_
 
 #include "common.h"
+#include "result.h"
 
-typedef long double (MathFunction)(long double *argv, size_t argc);
+typedef Result
+    (MathFunction)(long double *ans, long double *argv, size_t argc);
 
-void            FStartup();
+Result          FStartup();
 
 void            FCleanup();
 
 MathFunction   *FGetFunction(const char *name);
 
-bool            FAddFunction(const char *name, MathFunction *func);
+Result          FAddFunction(const char *name, MathFunction *func);
 
 #endif
 

@@ -2,28 +2,33 @@
 #define LOWCULATOR_CONTROL_H_
 
 #include "common.h"
+#include "result.h"
 
-void CStartup();
+Result  CStartup();
 
-void CCleanup();
+void    CCleanup();
 
-int CEof();
+Result  CEof();
 
-int CDirective(int line, int column, const char *dire);
+Result  CDirective(size_t line, size_t column, const char *dire);
 
-int CEvaluate(int line, int column, const char *expr);
+Result  CEvaluate(size_t line, size_t column, const char *expr);
 
-_Noreturn int CExit(int line, int column, const char *expr);
+_Noreturn
+Result  CExit(size_t line, size_t column, const char *expr);
 
-int CFile(const char *filename);
+Result  CFile(const char *filename);
 
-int CNextLine(char *buff, size_t size);
+Result  CNextLine(char *buff, size_t size);
 
-int COutput(const char *filename);
+Result  COutput(const char *filename);
 
-int CPanic(int line, int column, const char *val);
+Result  CPanic(size_t line, size_t column, const char *val);
 
-int CPrecision(int line, int column, const char *expr);
+Result  CPrecision(size_t line, size_t column, const char *expr);
+
+_Noreturn
+Result  CTerminate(int exitcode);
 
 #endif
 
