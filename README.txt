@@ -31,7 +31,8 @@ EXPRESSION:
     WS EXPRESSION
     ( EXPRESSION ) WS
     NUMBER
-    EXPRESSION OPR EXPRESSION
+    EXPRESSION BINARY_OPR EXPRESSION
+    UNARY_OPR EXPRESSION
     INVOCATION
 NUMBER:
     BINARY_FLOATING
@@ -58,9 +59,11 @@ HEADERS:
     HEXADECIMAL_HEADER:
         "0x"
 
-X_FLOATING:         (X_INTEGER)(\.(X_DIGITS)+)?(\.?[Ee](INTEGER))?(WS)
-X_INTEGER:          [\+\-]?(X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
-OPR:                [\+\-\*\/\%\^](WS)
+X_FLOATING:         (X_INTEGER)(\.(X_DIGITS)+)?((EXP_SEPARATOR)[\+\-]?(INTEGER))?(WS)
+X_INTEGER:          (X_HEADER)(0|((X_DIGITS(except 0))(X_DIGITS)*))
+EXP_SEPARATOR:      [EePp@]
+BINARY_OPR:         [\+\-\*\/\%\^](WS)
+UNARY_OPR:          [\+\-](WS)
 INVOCATION:
     FUNCTION:       (FUNCTION_NAME)(WS)\(EXPRESSION(,(EXPRESSION))?\)(WS)
     CONSTANT:       (CONSTANT_NAME)((WS)\((WS)\))?(WS)

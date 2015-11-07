@@ -70,9 +70,14 @@ static inline Result X_FClose(FILE *f) {
 
 Result CNextLine(size_t *line, char *buff, size_t size) {
     Result res = R_SUCCE;
-    while (x_cur && !fgets(buff, (int) size, x_cur->file))
-        if ((res = CEof()))
-           return res;
+    while (x_cur) {
+        if (x_cur->file == stdin && fputs(">>> ", stdout) < 0)
+            return RI_OPOU;
+        if (fgets(buff, (int) size, x_cur->file))
+            break;
+        else if ((res = CEof()))
+            return res;
+    }
     if (!x_cur)
         return RI_EOFR;
     *line = ++x_cur->line;
@@ -147,9 +152,9 @@ Result CPanic(size_t line, size_t column, const char *val) {
 }
 
 _Noreturn Result CExit(size_t line, size_t column, const char *expr) {
-    long double ans;
-    if (PEval(&ans, line, column, expr))
-        CTerminate(0);
+    long double ans = 0.0L;
+    if (*expr && PEval(&ans, line, column, expr))
+        CTerminate(RS_ILLD);
     CTerminate((int) lroundl(ans));
 }
 

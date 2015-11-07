@@ -26,11 +26,11 @@ long double SPopLdb(Stack *stk);
 
 void       *SPopPtr(Stack *stk);
 
-int         STopInt(Stack *stk);
+int        *STopInt(Stack *stk);
 
-long double STopLdb(Stack *stk);
+long double*STopLdb(Stack *stk);
 
-void       *STopPtr(Stack *stk);
+void      **STopPtr(Stack *stk);
 
 bool        SEmpty(Stack *stk);
 

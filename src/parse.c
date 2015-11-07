@@ -23,7 +23,30 @@ static bool         x_lav;
 static long double  x_pval;
 static char         x_pstr[BUF_SIZE];
 
-static int          x_pri[256];
+typedef enum X_Operator_ X_Operator;
+
+enum X_Operator_ {
+    OPR_TRM = 0,
+    BIN_ADD,
+    BIN_SUB,
+    BIN_MUL,
+    BIN_DIV,
+    BIN_MOD,
+    BIN_PWR,
+    UNA_PLS,
+    UNA_MNS,
+    OPR_COUNT,
+};
+
+#define OPR_PRI(o_) ( ((uint32_t) (o_)) >> 2U)
+#define OPR_OPE(o_) ((((uint32_t) (o_)) >> 1U) & 1U)
+#define OPR_ASS(o_) ( ((uint32_t) (o_))        & 1U)
+#define MAKEOPR(p_, o_, a_)     (   \
+    (((uint32_t) (p_)) << 2U)   |   \
+    (((uint32_t) (o_)) << 1U)   |   \
+     ((uint32_t) (a_))          )
+
+static uint32_t     x_ops[OPR_COUNT];
 
 #define ARG_MAX     4U
 
@@ -44,10 +67,33 @@ static inline int       XX_Read();
 static inline int       XX_Next();
 
 static inline int       XXX_ToDigit(int chr);
-static inline bool      XXX_ShouldPop(int instack, int topush);
 static inline Result    XXX_PushOpr(Stack *sopr, Stack *sval, int opr);
 
 #define XEE_RET(v_) do {SDestroy(sval); SDestroy(sopr); return v_;} while(false)
+
+#define XEE_PBU(bin_, una_)                         \
+    if (x_lav) {                                    \
+        if ((res = XXX_PushOpr(sopr, sval, bin_)))  \
+            XEE_RET(res);                           \
+    }                                               \
+    else {                                          \
+        if ((res = XXX_PushOpr(sopr, sval, una_)))  \
+            XEE_RET(res);                           \
+    }                                               \
+    XX_Next();                                      \
+    x_lav = false
+
+#define XEE_PBE(bin_)                               \
+    if (x_lav) {                                    \
+        if ((res = XXX_PushOpr(sopr, sval, bin_)))  \
+            XEE_RET(res);                           \
+    }                                               \
+    else {                                          \
+        r_in0 = *x_cur;                             \
+        XEE_RET(ERR(RS_UCHR));                      \
+    }                                               \
+    XX_Next();                                      \
+    x_lav = false
 
 static Result X_EvalExpression() {
     long double buf[ARG_MAX];
@@ -58,26 +104,22 @@ static Result X_EvalExpression() {
     while (*x_cur && *x_cur != ',' && *x_cur != ')') {
         switch (*x_cur) {
         case '+':
+            XEE_PBU(BIN_ADD, UNA_PLS);
+            break;
         case '-':
-            if (!x_lav && CIsDigD(XX_Peek())) {
-                if ((res = X_ParseNumber()))
-                    XEE_RET(res);
-                SPushLdb(sval, x_pval);
-                x_lav = true;
-                break;
-            }
+            XEE_PBU(BIN_SUB, UNA_MNS);
+            break;
         case '*':
+            XEE_PBE(BIN_MUL);
+            break;
         case '/':
+            XEE_PBE(BIN_DIV);
+            break;
         case '%':
+            XEE_PBE(BIN_MOD);
+            break;
         case '^':
-            if (!x_lav) {
-                r_in0 = *x_cur;
-                XEE_RET(ERR(RS_UCHR));
-            }
-            if ((res = XXX_PushOpr(sopr, sval, *x_cur)))
-                XEE_RET(res);
-            XX_Next();
-            x_lav = false;
+            XEE_PBE(BIN_PWR);
             break;
         case '(':
             XX_Next();
@@ -151,7 +193,7 @@ static Result X_EvalExpression() {
         XEE_RET(res);
     if (!x_lav || SSize(sopr) != 1 || SSize(sval) != 1)
         XEE_RET(ERR(RS_ILLE));
-    x_pval = STopLdb(sval);
+    x_pval = *STopLdb(sval);
     XEE_RET(R_SUCCE);
 }
 
@@ -196,15 +238,14 @@ static Result X_ParseNumber() {
                 dig = XXX_ToDigit(XX_Read());
             }
     }
-    if (*x_cur == '.' && XX_Read() != 'E' && *x_cur != 'e') {
-        r_in0 = *x_cur;
-        return ERR(RS_ENUM);
-    }
-    if (*x_cur == 'E' || *x_cur == 'e') {
+    if (CIsExpSep(*x_cur)) {
         XX_Read();
+        bool neg = *x_cur == '-';
+        if (neg || *x_cur == '+')
+            XX_Read();
         if ((res = X_ParseInteger()))
             return res;
-        val *= powl(sca, x_pval);
+        val *= powl(sca, neg ? -x_pval : x_pval);
     }
     if (CIsName(*x_cur)) {
         r_in0 = *x_cur;
@@ -221,9 +262,6 @@ static Result X_ParseNumber() {
 }
 
 static Result X_ParseInteger() {
-    bool neg = *x_cur == '-';
-    if (neg || *x_cur == '+')
-        XX_Read();
     if (!*x_cur)
         return ERR(RS_UTRM);
     if (*x_cur == '0') {
@@ -268,7 +306,7 @@ static Result X_ParseInteger() {
         val = val * x_sca + dig;
         dig = XXX_ToDigit(XX_Read());
     }
-    x_pval = neg ? -val : val;
+    x_pval = val;
     return R_SUCCE;
 }
 
@@ -308,45 +346,49 @@ static int XXX_ToDigit(int chr) {
     return -1;
 }
 
-static bool XXX_ShouldPop(int instack, int topush) {
-    //return x_pri[topush] & 1 ? x_pri[instack] > x_pri[topush] : x_pri[instack] >= x_pri[topush];
-    return x_pri[instack] >= x_pri[topush];
+static inline bool XXX_ShouldPop(int instack, int topush) {
+    return OPR_ASS(x_ops[topush]) ?
+        OPR_PRI(x_ops[instack]) > OPR_PRI(x_ops[topush]) :
+        OPR_PRI(x_ops[instack]) >= OPR_PRI(x_ops[topush]);
+    //return x_ops[instack] >= x_ops[topush];
 }
+
+#define XXXPO_EVOB(e_)                                  \
+    if (SSize(sval) < 2)    return ERR(RS_ILLE);        \
+    tmp = SPopLdb(sval); ans = STopLdb(sval); e_; break
+#define XXXPO_EVOU(e_)                                  \
+    if (SEmpty(sval))       return ERR(RS_ILLE);        \
+    ans = STopLdb(sval); e_; break
 
 static Result XXX_PushOpr(Stack *sopr, Stack *sval, int opr) {
     Result res = R_SUCCE;
-    while (!SEmpty(sopr) && XXX_ShouldPop(STopInt(sopr), opr)) {
-        if (SSize(sval) < 2)
-            return RS_ILLE;
-        long double rhs = SPopLdb(sval);
-        long double lhs = SPopLdb(sval);
-        long double ans = 0.0L;
+    long double tmp;
+    long double *ans;
+    while (!SEmpty(sopr) && XXX_ShouldPop(*STopInt(sopr), opr)) {
         switch (SPopInt(sopr)) {
-        case '+':
-            ans = lhs + rhs;
-            break;
-        case '-':
-            ans = lhs - rhs;
-            break;
-        case '*':
-            ans = lhs * rhs;
-            break;
-        case '/':
-            ans = lhs / rhs;
-            break;
-        case '%':
-            ans = fmodl(lhs, rhs);
-            break;
-        case '^':
-            ans = powl(lhs, rhs);
-            break;
+        case OPR_TRM:
+            return R_ITRNL;
+        case BIN_ADD:
+            XXXPO_EVOB(*ans += tmp);
+        case BIN_SUB:
+            XXXPO_EVOB(*ans -= tmp);
+        case BIN_MUL:
+            XXXPO_EVOB(*ans *= tmp);
+        case BIN_DIV:
+            XXXPO_EVOB(*ans /= tmp);
+        case BIN_MOD:
+            XXXPO_EVOB(*ans = fmodl(*ans, tmp));
+        case BIN_PWR:
+            XXXPO_EVOB(*ans = powl(*ans, tmp));
+        case UNA_PLS:
+            XXXPO_EVOU();
+        case UNA_MNS:
+            XXXPO_EVOU(*ans = -*ans);
         default:
             return R_ITRNL;
         }
-        if ((res = RMathType(ans)))
+        if ((res = RMathType(*ans)))
             return ERR(res);
-        if (SPushLdb(sval, ans))
-            return R_ITRNL;
     }
     if (SPushInt(sopr, opr))
         return R_ITRNL;
@@ -368,11 +410,11 @@ Result PEval(long double *ans, size_t line, size_t column, const char *expr) {
 
 Result PStartup() {
     INIT_CTYPE;
-    memset(x_pri, -1, sizeof(x_pri));
-    x_pri[0] = 0;
-    x_pri['+'] = x_pri['-'] = (1 << 1) + 0;
-    x_pri['*'] = x_pri['/'] = x_pri['%'] = (2 << 1) + 0;
-    x_pri['^'] = (3 << 1) + 1;
+    x_ops[OPR_TRM] = MAKEOPR(0, 0, 0);
+    x_ops[BIN_ADD] = x_ops[BIN_SUB] = MAKEOPR(1, 2, 0);
+    x_ops[BIN_MUL] = x_ops[BIN_DIV] = x_ops[BIN_MOD] = MAKEOPR(2, 2, 0);
+    x_ops[UNA_PLS] = x_ops[UNA_MNS] = MAKEOPR(3, 1, 1);
+    x_ops[BIN_PWR] = MAKEOPR(3, 2, 1);
     return R_SUCCE;
 }
 

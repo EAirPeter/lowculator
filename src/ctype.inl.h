@@ -2,18 +2,21 @@
 #   error "improper use of this file"
 #endif
 
-#define C_DIG   0x00000001 
-#define C_DIB   0x00000002
-#define C_DIO   0x00000004
-#define C_DID   0x00000008
-#define C_DIH   0x00000010
-#define C_ALP   0x00000020
-#define C_UPR   0x00000040
-#define C_LWR   0x00000080
-#define C_OPR   0x00000100
-#define C_STR   0x00000200
-#define C_WSP   0x00000400
-#define C_NAM   0x00000800
+enum {
+    C_DIG = 1,
+    C_DIB = C_DIG << 1,
+    C_DIO = C_DIB << 1,
+    C_DID = C_DIO << 1,
+    C_DIH = C_DID << 1,
+    C_ESP = C_DIH << 1,
+    C_ALP = C_ESP << 1,
+    C_UPR = C_ALP << 1,
+    C_LWR = C_UPR << 1,
+    C_OPR = C_LWR << 1,
+    C_STR = C_OPR << 1,
+    C_WSP = C_STR << 1,
+    C_NAM = C_WSP << 1,
+};
 
 uint32_t        xc_type[256];
 
@@ -45,6 +48,10 @@ static inline bool CIsDigH(int chr) {
     return xc_type[chr] & C_DIH;
 }
 
+static inline bool CIsExpSep(int chr) {
+    return xc_type[chr] & C_ESP;
+}
+
 static inline bool CIsName(int chr) {
     return xc_type[chr] & C_NAM;
 }
@@ -74,6 +81,9 @@ static inline bool CIsWS(int chr) {
     for (int i = 'a'; i <= 'z'; ++i)                    \
         xc_type[i] |= C_NAM | C_ALP | C_LWR;            \
     xc_type['_'] |= C_NAM;                              \
+    int esps[] = {'E', 'e', 'P', 'p', '@', -1};         \
+    for (int *p = esps; *p != -1; ++p)                  \
+        xc_type[*p] |= C_ESP;                           \
     int oprs[] = {'+', '-', '*', '/', '%', '^', -1};    \
     for (int *p = oprs; *p != -1; ++p)                  \
         xc_type[*p] |= C_STR | C_OPR;                   \

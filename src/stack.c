@@ -124,16 +124,16 @@ void *SPopPtr(Stack *stk) {
     return res;
 }
 
-int STopInt(Stack *stk) {
-    return stk->top ? stk->top->ele.int_ : 0;
+int *STopInt(Stack *stk) {
+    return stk->top ? &stk->top->ele.int_ : nullptr;
 }
 
-long double STopLdb(Stack *stk) {
-    return stk->top ? stk->top->ele.ldb_ : 0.0L;
+long double *STopLdb(Stack *stk) {
+    return stk->top ? &stk->top->ele.ldb_ : nullptr;
 }
 
-void *STopPtr(Stack *stk) {
-    return stk->top ? stk->top->ele.ptr_ : nullptr;
+void **STopPtr(Stack *stk) {
+    return stk->top ? &stk->top->ele.ptr_ : nullptr;
 }
 
 bool SEmpty(Stack *stk) {
