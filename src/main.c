@@ -9,9 +9,9 @@
 
 #define BUF_SIZE 1024U
 
-static char buf[BUF_SIZE];
+static char buf[BUF_SIZE] = {};
 
-static bool suppressed;
+static bool suppressed = false;
 
 static Result ProcessFile(const char *filename) {
     Result res = R_SUCCE;

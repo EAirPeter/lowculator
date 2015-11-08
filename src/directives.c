@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static size_t       x_lne;
-static size_t       x_col;
-static const char  *x_src;
-static const char  *x_cur;
+static size_t       x_lne = 0;
+static size_t       x_col = 0;
+static const char  *x_src = nullptr;
+static const char  *x_cur = nullptr;
 
 #define LNE             (x_lne)
 #define COL             (x_col + (size_t) (x_cur - x_src))

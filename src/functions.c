@@ -18,7 +18,7 @@ struct X_Node_ {
 
 #define BUCKET_SIZE 100003U
 
-static X_Node *x_map[BUCKET_SIZE];
+static X_Node *x_map[BUCKET_SIZE] = {};
 
 static uint32_t X_Hash(const char *str) {
     uint32_t res = 0xAAAAAAAA;

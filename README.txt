@@ -6,13 +6,14 @@ Use COMMANDLINE to start this program.
 COMMANDLINE:
     EXECUTABLE              (EXECUTABLE) (DEFUALT_COMMAND)
     EXECUTABLE COMMANDS     process all commands one by one.
+
 COMMANDS:
-    -c EXPRESSION           #precision EXPRESSION
-    -e EXPRESSION           #evaluate EXPRESSION
-    -f FILENAME             #file FILENAME
-    -o FILENAME             #output EXPRESSION
-    -p (on|off)             #p (on|off)
-    -x EXPRESSION           #exit EXPRESSION
+    -c EXPRESSION           <=> #precision EXPRESSION
+    -e EXPRESSION           <=> #evaluate EXPRESSION
+    -f FILENAME             <=> #file FILENAME
+    -o FILENAME             <=> #output EXPRESSION
+    -p (on|off)             <=> #panic (on|off)
+    -x EXPRESSION           <=> #exit EXPRESSION
 DEFUALT_COMMAND:
     "-f --"                 
 
@@ -101,7 +102,7 @@ DIRECTIVES:
 
     DIR_PANIC:              panic (on|off)
         =>Turn on/off the panic mode. If turned on, any failed operation shall
-            cause ther program exit. (default off)
+            cuase the program exited. (default off)
 
 FILENAME:
     "--"                    stdin or stdout.

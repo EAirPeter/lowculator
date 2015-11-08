@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool c_panic;
+bool c_panic = false;
 
 #define BUF_SIZE    256U
 
@@ -25,7 +25,7 @@ struct X_Element_ {
     X_Element  *next;
 };
 
-static X_Element *x_els;
+static X_Element *x_els = nullptr;
 
 static inline void X_DestroyElement(X_Element *ele) {
     if (ele->name) {
@@ -55,12 +55,12 @@ static inline X_Element *X_CreateElement(FILE *file, const char *name) {
     return res;
 }
 
-static char         x_fmt[BUF_SIZE];
+static char         x_fmt[BUF_SIZE] = {};
 
-static X_Element   *x_cur;
+static X_Element   *x_cur = nullptr;
 
-static FILE        *x_out;
-static Stack       *x_sel;
+static FILE        *x_out = nullptr;
+static Stack       *x_sel = nullptr;
 
 static inline Result X_FClose(FILE *f) {
     if (f != stdin && f != stdout)

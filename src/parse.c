@@ -11,17 +11,17 @@
 
 #include "ctype.inl.h"
 
-static size_t       x_lne;
-static size_t       x_col;
-static int          x_sca;
-static const char  *x_src;
-static const char  *x_cur;
-static bool         x_lav;
+static size_t       x_lne = 0;
+static size_t       x_col = 0;
+static int          x_sca = 0;
+static const char  *x_src = nullptr;
+static const char  *x_cur = nullptr;
+static bool         x_lav = false;
 
 #define BUF_SIZE    256U
 
-static long double  x_pval;
-static char         x_pstr[BUF_SIZE];
+static long double  x_pval = 0.0L;
+static char         x_pstr[BUF_SIZE] = {};
 
 typedef enum X_Operator_ X_Operator;
 
@@ -46,7 +46,7 @@ enum X_Operator_ {
     (((uint32_t) (o_)) << 1U)   |   \
      ((uint32_t) (a_))          )
 
-static uint32_t     x_ops[OPR_COUNT];
+static uint32_t     x_ops[OPR_COUNT] = {};
 
 #define ARG_MAX     4U
 

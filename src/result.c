@@ -8,13 +8,13 @@
 #include <stdio.h>
 #include <string.h>
 
-int     r_in0;
-int     r_in1;
-char    r_str[R_BUFFSIZE];
+int     r_in0 = 0;
+int     r_in1 = 0;
+char    r_str[R_BUFFSIZE] = {};
 
-static char x_msg[R_BUFFSIZE << 2U];
-static char x_ctx[R_BUFFSIZE];
-static char x_wrp[256][8];
+static char x_msg[R_BUFFSIZE << 2U] = {};
+static char x_ctx[R_BUFFSIZE] = {};
+static char x_wrp[256][8] = {};
 
 #define MSGPRINTF(format_, ...)   \
     sprintf(x_msg, "In %s, at %d:%d, " format_, x_ctx, lne, col, __VA_ARGS__)
