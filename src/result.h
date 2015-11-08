@@ -34,7 +34,7 @@ extern  char        r_str[R_BUFFSIZE];
 #define R_MATHC 0x2U
 #define R_IOERR 0x3U
 
-#define R_ITRNL 0xFFFFFFFFU;
+#define R_ITRNL 0xFFFFFFFFU
 
 #define XR_DEFSUB(base_, code_ )    ((base_) | ((code_) << 2U))
 #define XR_SSUB(code_)              XR_DEFSUB(R_SYNTX, (code_))

@@ -191,9 +191,9 @@ Result CPrecision(size_t line, size_t column, const char *expr) {
 }
 
 Result CPrintResultMsg(Result code) {
-    if (fputs(RMessage(code), x_out) < 0)
+    if (fputs(RMessage(code), stderr) < 0)
         return RI_OPOU;
-    if (fputc('\n', x_out) < 0)
+    if (fputc('\n', stderr) < 0)
         return RI_OPOU;
     return R_SUCCE;
 } 
@@ -227,6 +227,8 @@ void CCleanup() {
     while (x_cur)
         if (CEof())
             break;
+    if (x_out && x_out != stdout)
+        fclose(x_out);
     for (X_Element *i = x_cur; i; ) {
         X_DestroyElement(i);
         i = (X_Element *) SPopPtr(x_sel);
