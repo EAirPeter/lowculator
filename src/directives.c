@@ -18,7 +18,7 @@ static const char  *x_cur = nullptr;
 #define LNE             (x_lne)
 #define COL             (x_col + (size_t) (x_cur - x_src))
 
-#define E_DIR()         R_MAKER(LNE, COL, RS_ILLD)
+#define ERR(type_)      R_MAKER(LNE, COL, type_)
 
 #define DIRSTR(dir_)    CONCAT(x_DIR, dir_)
 #define DIRLEN(dir_)    CONCAT(x_LEN, dir_)
@@ -29,7 +29,9 @@ static const char  *x_cur = nullptr;
 #define CHECKDIR(dir_)                                      \
     if (!strncmp(x_cur, DIRSTR(dir_), DIRLEN(dir_))) do {   \
         x_cur += DIRLEN(dir_);                              \
-        return DIRFUN(dir_)();                              \
+        if ((res = DIRFUN(dir_)()))                         \
+            return ERR(res);                                \
+        return R_SUCCE;                                     \
     } while (false)         
 
 #define DEFDIR(dir_, ...)                   \
@@ -78,12 +80,13 @@ DEFDIR(precision) {
 }
 
 Result DProcess(size_t line, size_t column, const char *dire) {
+    Result res = R_SUCCE;
     x_lne = line;
     x_col = column;
     x_src = dire;
     x_cur = x_src;
     if (*x_cur != '#')
-        return E_DIR();
+        return ERR(RS_ILLD);
     ++x_cur;
     CHECKDIR(eof);
     CHECKDIR(evaluate);
@@ -92,7 +95,7 @@ Result DProcess(size_t line, size_t column, const char *dire) {
     CHECKDIR(output);
     CHECKDIR(panic);
     CHECKDIR(precision);
-    return E_DIR();
+    return ERR(RS_ILLD);
 }
 
 Result DStartup() {

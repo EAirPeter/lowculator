@@ -16,11 +16,20 @@ bool c_panic = false;
 
 #define BUF_SIZE    256U
 
+static const char *x_fnl = "(file name too long)";
+
+static inline void X_CopyFileName(char *dst, const char *src, size_t bsz) {
+    if (strlen(src) < bsz)
+        strcpy(dst, src);
+    else
+        strcpy(dst, x_fnl);
+}
+
 typedef struct X_Element_ X_Element;
 
 struct X_Element_ {
     FILE       *file;
-    char       *name;
+    char        name[BUF_SIZE];
     size_t      line;
     X_Element  *next;
 };
@@ -28,10 +37,6 @@ struct X_Element_ {
 static X_Element *x_els = nullptr;
 
 static inline void X_DestroyElement(X_Element *ele) {
-    if (ele->name) {
-        free(ele->name);
-        ele->name = nullptr;
-    }
     ele->next = x_els;
     x_els = ele;
 }
@@ -45,7 +50,6 @@ static inline X_Element *X_CreateElement(FILE *file, const char *name) {
     if (!res)
         return nullptr;
     res->file = file;
-    res->name = (char *) malloc(strlen(name) + 1);
     if (!res->name) {
         X_DestroyElement(res);
         return nullptr;
@@ -59,12 +63,15 @@ static char         x_fmt[BUF_SIZE] = {};
 
 static X_Element   *x_cur = nullptr;
 
+static char         x_ofn[BUF_SIZE] = {};
 static FILE        *x_out = nullptr;
 static Stack       *x_sel = nullptr;
 
-static inline Result X_FClose(FILE *f) {
-    if (f != stdin && f != stdout)
-        return fclose(f) ? RI_FCLS : R_SUCCE;
+static inline Result X_FClose(FILE *f, const char *filename) {
+    if (f != stdin && f != stdout && fclose(f)) {
+        X_CopyFileName(r_str, filename, R_BUFFSIZE);
+        return RI_FCLS;
+    }
     return R_SUCCE;
 }
 
@@ -87,7 +94,7 @@ Result CNextLine(size_t *line, char *buff, size_t size) {
 Result CEof() {
     Result res = R_SUCCE;
     if (x_cur) {
-        if ((res = X_FClose(x_cur->file)))
+        if ((res = X_FClose(x_cur->file, x_cur->name)))
             return res;
         X_DestroyElement(x_cur);
         x_cur = (X_Element *) SPopPtr(x_sel);
@@ -105,8 +112,10 @@ Result CFile(const char *filename) {
     if (!strcmp(filename, "--"))
         e = X_CreateElement(stdin, "(stdin)");
     else {
-        if (!(f = fopen(filename, "r")))
+        if (!(f = fopen(filename, "r"))) {
+            X_CopyFileName(r_str, filename, R_BUFFSIZE);
             return RI_FOPN;
+        }
         e = X_CreateElement(f, filename);
     }
     if (!e)
@@ -125,12 +134,18 @@ Result COutput(const char *filename) {
     FILE *f = nullptr;
     if (!strcmp(filename, "--"))
         f = stdout;
-    else
-        f = fopen(filename, "w");
-    if (!f)
-        return RI_FOPN;
-    if ((res = X_FClose(x_out)))
+    else {
+        if (!(f = fopen(filename, "w"))) {
+            X_CopyFileName(r_str, filename, R_BUFFSIZE);
+            return RI_FOPN;
+        }
+    }
+    if ((res = X_FClose(x_out, x_ofn)))
         return res;
+    if (f == stdout)
+        strcpy(x_ofn, "(stdout)");
+    else
+        X_CopyFileName(x_ofn, filename, BUF_SIZE);
     x_out = f;
     return R_SUCCE;
 }
@@ -202,6 +217,7 @@ Result CStartup() {
     x_els = nullptr;
     if (!(x_sel = SCreate()))
         return R_ITRNL;
+    strcpy(x_ofn, "(stdout)");
     x_out = stdout;
     strcpy(x_fmt, "%.8Lf\n");
     return R_SUCCE;
@@ -211,11 +227,15 @@ void CCleanup() {
     while (x_cur)
         if (CEof())
             break;
-    X_Element *e = x_cur;
-    while (e) {
-        X_DestroyElement(e);
-        e = (X_Element *) SPopPtr(x_sel);
+    for (X_Element *i = x_cur; i; ) {
+        X_DestroyElement(i);
+        i = (X_Element *) SPopPtr(x_sel);
     }
     SDestroy(x_sel);
+    for (X_Element *i = x_els; i; ) {
+        X_Element *p = i->next;
+        free(i);
+        i = p;
+    }
 }
 
